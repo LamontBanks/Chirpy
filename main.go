@@ -20,9 +20,9 @@ func main() {
 
 	// Handlers
 	mux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
-	mux.HandleFunc("/healthz", healthHandler)
-	mux.HandleFunc("/metrics", cfg.metricsHandler)
-	mux.HandleFunc("/reset", cfg.resetMetricsHandler)
+	mux.HandleFunc("GET /healthz", healthHandler)
+	mux.HandleFunc("GET /metrics", cfg.metricsHandler)
+	mux.HandleFunc("POST /reset", cfg.resetMetricsHandler)
 
 	// Set handlers, port
 	server := &http.Server{
