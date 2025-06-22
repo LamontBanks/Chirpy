@@ -6,7 +6,6 @@ import (
 	"net/http"
 )
 
-// Write error response to the writer
 func sendErrorResponse(w http.ResponseWriter, msg string, statusCode int, errorToLog error) {
 	if errorToLog != nil {
 		log.Printf("%v", errorToLog)
