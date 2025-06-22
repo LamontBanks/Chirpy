@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync/atomic"
@@ -18,13 +19,12 @@ func main() {
 	// Matches incoming URL requests to registered patterns and calls the attached handlers
 	mux := http.NewServeMux()
 
-	// Handlers
 	mux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
 	mux.HandleFunc("GET /api/healthz", healthHandler)
 	mux.HandleFunc("GET /admin/metrics", cfg.metricsHandler)
 	mux.HandleFunc("POST /admin/reset", cfg.resetMetricsHandler)
+	mux.HandleFunc("POST /api/validate_chirp", validateChirpHandler)
 
-	// Set handlers, port
 	server := &http.Server{
 		Handler: mux,
 		Addr:    ":8080",
@@ -49,6 +49,46 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 	})
 }
 
+func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
+	// Expected params for the request JSON body
+	type requestBody struct {
+		Body string `json:"body"`
+	}
+
+	type successResponse struct {
+		Valid bool `json:"valid"`
+	}
+
+	// Decode into the params struct
+	decoder := json.NewDecoder(r.Body)
+	request := requestBody{}
+	err := decoder.Decode(&request)
+
+	if err != nil {
+		sendErrorResponse(w, "Something went wrong", 500, err)
+		return
+	}
+
+	if len(request.Body) == 0 {
+		sendErrorResponse(w, "Something went wrong", 400, nil)
+		return
+	}
+
+	// "Chirps" must be 140 characters or fewer
+	if len(request.Body) <= 140 {
+		success := successResponse{
+			Valid: true,
+		}
+
+		sendJSONResponse(w, 200, success)
+		return
+	} else {
+		sendErrorResponse(w, "Chirp is too long", 400, nil)
+		return
+	}
+}
+
+// Display metrics (ex: page count)
 func (cfg *apiConfig) metricsHandler(w http.ResponseWriter, r *http.Request) {
 	responseHTML := fmt.Sprintf("<html><body><h1>Welcome, Chirpy Admin</h1><p>Chirpy has been visited %d times!</p></body></html>", cfg.fileServerHits.Load())
 
