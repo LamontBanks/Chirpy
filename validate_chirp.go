@@ -44,14 +44,28 @@ func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func censoredBannedWords(originalChirp string) string {
-	censoredText := originalChirp
-	censorMasking := "****"
-
+// Masks banned words from the text, case-insensitive
+// Banned words with punctuation, other letters, etc. are skipped
+// Example: "Sharbert!" is *not* masked
+func censoredBannedWords(originalText string) string {
 	bannedWords := []string{"kerfuffle", "sharbert", "fornax"}
 
-	for _, word := range bannedWords {
-		censoredText = strings.ReplaceAll(censoredText, word, censorMasking)
+	censoredText := originalText
+	censorMasking := "****"
+
+	for _, bannedWord := range bannedWords {
+		// Split text by spaces to isolate words
+		splitText := strings.Split(censoredText, " ")
+
+		for i := range splitText {
+			// Convert to lowercase for case-insensitve comparison
+			if strings.ToLower(splitText[i]) == bannedWord {
+				splitText[i] = censorMasking
+			}
+		}
+
+		// Recombine the string for the next banned word check
+		censoredText = strings.Join(splitText, " ")
 	}
 
 	return censoredText
