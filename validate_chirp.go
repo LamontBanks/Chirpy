@@ -14,7 +14,7 @@ func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 	req := requestBody{}
 
 	type responseBody struct {
-		Valid bool `json:"valid"`
+		Body string `json:"body"`
 	}
 	resp := responseBody{}
 
@@ -35,7 +35,7 @@ func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 
 	// "Chirps" must be 140 characters or fewer
 	if len(req.Body) <= 140 {
-		resp.Valid = true
+		resp.Body = censoredBannedWords(req.Body)
 		sendJSONResponse(w, 200, resp)
 		return
 	} else {
@@ -44,36 +44,15 @@ func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func censoredBannedWords(w http.ResponseWriter, r *http.Request) {
-	// Request, response
-	type request struct {
-		Body string
-	}
-	req := request{}
-
-	type response struct {
-		Body string
-	}
-	resp := response{}
-
-	// Decode request
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&req)
-	if err != nil {
-		sendErrorResponse(w, "Something went wrong", 500, err)
-	}
-
-	// Replace banned words
-	censored_chirp := req.Body
-	censoredText := "****"
+func censoredBannedWords(originalChirp string) string {
+	censoredText := originalChirp
+	censorMasking := "****"
 
 	bannedWords := []string{"kerfuffle", "sharbert", "fornax"}
 
 	for _, word := range bannedWords {
-		censored_chirp = strings.ReplaceAll(censored_chirp, word, censoredText)
+		censoredText = strings.ReplaceAll(censoredText, word, censorMasking)
 	}
 
-	// Response
-	resp.Body = censored_chirp
-	sendJSONResponse(w, 200, resp)
+	return censoredText
 }
