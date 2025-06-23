@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
+func ValidateChirpHandler(w http.ResponseWriter, r *http.Request) {
 	// Request, response
 	type requestBody struct {
 		Body string `json:"body"`
@@ -24,22 +24,22 @@ func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate chirp
 	if err != nil {
-		sendErrorResponse(w, "Something went wrong", 500, err)
+		SendErrorResponse(w, "Something went wrong", 500, err)
 		return
 	}
 
 	if len(req.Body) == 0 {
-		sendErrorResponse(w, "Something went wrong", 400, nil)
+		SendErrorResponse(w, "Something went wrong", 400, nil)
 		return
 	}
 
 	// "Chirps" must be 140 characters or fewer
 	if len(req.Body) <= 140 {
 		resp.Body = censoredBannedWords(req.Body)
-		sendJSONResponse(w, 200, resp)
+		SendJSONResponse(w, 200, resp)
 		return
 	} else {
-		sendErrorResponse(w, "Chirp is too long", 400, nil)
+		SendErrorResponse(w, "Chirp is too long", 400, nil)
 		return
 	}
 }
