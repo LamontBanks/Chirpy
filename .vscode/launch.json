@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+
+    // Open a new terminal and run the following:
+    // `$ dlv debug . --headless --listen=:12345 --continue --accept-multiclient`
+    // Then, place a breakpoint in a handler, ex: in the `/healthz` handler
+    // Finally, send a Postman/curl/etc. request to the server; the breakpoint should be hit and you can start debugging
+
+    // If the server is still running even after cloing VSCode, check the Activity Monitor on Mac, and force stop the "_debug_..." program
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Connect to server",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "remotePath": "${workspaceFolder}",
+            "port": 12345,
+            "host": "127.0.0.1"
+        }
+    ]
+}
