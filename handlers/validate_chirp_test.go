@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -17,9 +18,9 @@ func TestCensoredBannedWords(t *testing.T) {
 }
 
 func TestValidateChirpHandler(t *testing.T) {
-	inputBody := `{"body":"test kerfuffle"}`
-	expectedBody := `{"body":"test ****"}`
-	expectedStatusCode := 200
+	inputBody := `{"body":"I had something interesting for breakfast"}`
+	expectedBody := `{"body":"I had something interesting for breakfast"}`
+	expectedStatusCode := http.StatusOK
 
 	// Request
 	request := httptest.NewRequest("POST", "/api/validate_chirp", strings.NewReader(inputBody))
@@ -37,6 +38,27 @@ func TestValidateChirpHandler(t *testing.T) {
 	}
 
 	// Assert status code, response body, etc.
+	assertEqual(response.StatusCode, expectedStatusCode, nil, t)
+	assertEqual(string(body), expectedBody, inputBody, t)
+}
+
+func TestTooLongChirp(t *testing.T) {
+	inputBody := `{"body": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."}`
+	expectedStatusCode := http.StatusBadRequest
+	expectedBody := `{"error":"Chirp is too long"}`
+
+	request := httptest.NewRequest("POST", "/api/validate_chirp", strings.NewReader(inputBody))
+	request.Header.Set("Content-Type", "application/json")
+
+	httpRecorder := httptest.NewRecorder()
+	ValidateChirpHandler(httpRecorder, request)
+
+	response := httpRecorder.Result()
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
 	assertEqual(response.StatusCode, expectedStatusCode, nil, t)
 	assertEqual(string(body), expectedBody, inputBody, t)
 }
