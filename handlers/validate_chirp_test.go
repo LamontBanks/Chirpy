@@ -17,6 +17,15 @@ func TestCensoredBannedWords(t *testing.T) {
 	assertEqual(expected, actual, input, t)
 }
 
+func TestAllBannedWords(t *testing.T) {
+	bannedWords := []string{"kerfuffle", "sharbert", "fornax"}
+	expected := "****"
+
+	for _, word := range bannedWords {
+		assertEqual(censoredBannedWords(word), expected, word, t)
+	}
+}
+
 func TestValidateChirpHandler(t *testing.T) {
 	inputBody := `{"body":"I had something interesting for breakfast"}`
 	expectedBody := `{"body":"I had something interesting for breakfast"}`
