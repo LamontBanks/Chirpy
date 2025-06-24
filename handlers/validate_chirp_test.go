@@ -17,11 +17,12 @@ func TestCensoredBannedWords(t *testing.T) {
 }
 
 func TestValidateChirpHandler(t *testing.T) {
-	input := `{"body":"test kerfuffle"}`
-	expected := `{"body":"test ****"}`
+	inputBody := `{"body":"test kerfuffle"}`
+	expectedBody := `{"body":"test ****"}`
+	expectedStatusCode := 200
 
 	// Request
-	request := httptest.NewRequest("POST", "/api/validate_chirp", strings.NewReader(input))
+	request := httptest.NewRequest("POST", "/api/validate_chirp", strings.NewReader(inputBody))
 	request.Header.Set("Content-Type", "application/json")
 
 	// Call handler
@@ -36,7 +37,8 @@ func TestValidateChirpHandler(t *testing.T) {
 	}
 
 	// Assert status code, response body, etc.
-	assertEqual(string(body), expected, input, t)
+	assertEqual(response.StatusCode, expectedStatusCode, nil, t)
+	assertEqual(string(body), expectedBody, inputBody, t)
 }
 
 func assertEqual(actual, expected, input any, t *testing.T) {
