@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"io"
+	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -13,8 +16,31 @@ func TestCensoredBannedWords(t *testing.T) {
 	assertEqual(expected, actual, input, t)
 }
 
-func assertEqual(expected, actual, input any, t *testing.T) {
+func TestValidateChirpHandler(t *testing.T) {
+	input := `{"body":"test kerfuffle"}`
+	expected := `{"body":"test ****"}`
+
+	// Request
+	request := httptest.NewRequest("POST", "/api/validate_chirp", strings.NewReader(input))
+	request.Header.Set("Content-Type", "application/json")
+
+	// Call handler
+	httpRecorder := httptest.NewRecorder()
+	ValidateChirpHandler(httpRecorder, request)
+
+	// Read response
+	response := httpRecorder.Result()
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	// Assert status code, response body, etc.
+	assertEqual(string(body), expected, input, t)
+}
+
+func assertEqual(actual, expected, input any, t *testing.T) {
 	if actual != expected {
-		t.Errorf("\nInput:\n\t%v\nActual:\n\t%v\nExpected:\n\t%v", input, expected, actual)
+		t.Errorf("\nInput:\n\t%v\nActual:\n\t%v\nExpected:\n\t%v", input, actual, expected)
 	}
 }
