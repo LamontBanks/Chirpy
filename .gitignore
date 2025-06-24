@@ -1,3 +1,6 @@
+.env
+notes.txt
+# Binaries generated from local, boot.dev testing
+Chirpy
 out
 __debug_*
-notes.txt

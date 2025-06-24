@@ -1,20 +1,41 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 	"sync/atomic"
 
 	handlers "github.com/LamontBanks/Chirpy/handlers"
+	"github.com/LamontBanks/Chirpy/internal/database"
+	"github.com/joho/godotenv"
+
+	_ "github.com/lib/pq"
 )
 
 // Store stateful data between API calls
 type apiConfig struct {
 	fileServerHits atomic.Int32
+	db             *database.Queries
 }
 
 func main() {
-	cfg := &apiConfig{}
+	// Load database config
+	godotenv.Load()
+
+	// Database conection, save to shared config
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		panic("Error connecting to the database")
+	}
+
+	dbQueries := database.New(db)
+
+	cfg := &apiConfig{
+		db: dbQueries,
+	}
 	cfg.fileServerHits.Store(0)
 
 	// Matches incoming URL requests to registered patterns and calls the attached handlers
