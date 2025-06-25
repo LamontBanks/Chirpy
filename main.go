@@ -7,8 +7,8 @@ import (
 	"os"
 	"sync/atomic"
 
-	handlers "github.com/LamontBanks/Chirpy/handlers"
 	"github.com/LamontBanks/Chirpy/internal/database"
+
 	"github.com/joho/godotenv"
 
 	_ "github.com/lib/pq"
@@ -21,16 +21,16 @@ type apiConfig struct {
 }
 
 func main() {
-	// Load database config
-	godotenv.Load()
+	// Initialize database
+	godotenv.Load() // .env at root
 
-	// Database conection, save to shared config
 	dbURL := os.Getenv("DB_URL")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		panic("Error connecting to the database")
 	}
 
+	// Create, set database into the shared config
 	dbQueries := database.New(db)
 
 	cfg := &apiConfig{
@@ -38,15 +38,18 @@ func main() {
 	}
 	cfg.fileServerHits.Store(0)
 
-	// Matches incoming URL requests to registered patterns and calls the attached handlers
+	// Set Endpoints
 	mux := http.NewServeMux()
 
 	mux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
-	mux.HandleFunc("GET /api/healthz", handlers.HealthHandler)
+	mux.HandleFunc("GET /api/healthz", healthHandler)
 	mux.HandleFunc("GET /admin/metrics", cfg.metricsHandler)
 	mux.HandleFunc("POST /admin/reset", cfg.resetMetricsHandler)
-	mux.HandleFunc("POST /api/validate_chirp", handlers.ValidateChirpHandler)
+	mux.HandleFunc("POST /api/validate_chirp", validateChirpHandler)
 
+	mux.HandleFunc("POST /api/users", cfg.createUserHandler())
+
+	// Start server
 	server := &http.Server{
 		Handler: mux,
 		Addr:    ":8080",
@@ -68,7 +71,7 @@ func (cfg *apiConfig) metricsHandler(w http.ResponseWriter, r *http.Request) {
 	responseHTML := fmt.Sprintf("<html><body><h1>Welcome, Chirpy Admin</h1><p>Chirpy has been visited %d times!</p></body></html>", cfg.fileServerHits.Load())
 
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(responseHTML))
 }
 
@@ -77,6 +80,6 @@ func (cfg *apiConfig) resetMetricsHandler(w http.ResponseWriter, r *http.Request
 	cfg.fileServerHits.Store(0)
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(http.StatusText(http.StatusOK)))
 }

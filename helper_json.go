@@ -1,4 +1,4 @@
-package handlers
+package main
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func SendErrorResponse(w http.ResponseWriter, msg string, statusCode int, errorToLog error) {
+func sendErrorResponse(w http.ResponseWriter, msg string, statusCode int, errorToLog error) {
 	if errorToLog != nil {
 		log.Printf("%v", errorToLog)
 	}
@@ -25,7 +25,7 @@ func SendJSONResponse(w http.ResponseWriter, statusCode int, jsonStruct interfac
 	data, err := json.Marshal(jsonStruct)
 	if err != nil {
 		log.Printf("%v", err)
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

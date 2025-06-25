@@ -1,4 +1,4 @@
-package handlers
+package main
 
 import (
 	"io"
@@ -37,7 +37,7 @@ func TestValidateChirpHandler(t *testing.T) {
 
 	// Call handler
 	httpRecorder := httptest.NewRecorder()
-	ValidateChirpHandler(httpRecorder, request)
+	validateChirpHandler(httpRecorder, request)
 
 	// Read response
 	response := httpRecorder.Result()
@@ -60,7 +60,7 @@ func TestTooLongChirp(t *testing.T) {
 	request.Header.Set("Content-Type", "application/json")
 
 	httpRecorder := httptest.NewRecorder()
-	ValidateChirpHandler(httpRecorder, request)
+	validateChirpHandler(httpRecorder, request)
 
 	response := httpRecorder.Result()
 	body, err := io.ReadAll(response.Body)
