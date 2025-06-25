@@ -18,23 +18,29 @@ import (
 type apiConfig struct {
 	fileServerHits atomic.Int32
 	db             *database.Queries
+	platform       string
 }
 
 func main() {
-	// Initialize database
+
 	godotenv.Load() // .env at root
 
+	// Initialize database
 	dbURL := os.Getenv("DB_URL")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		panic("Error connecting to the database")
 	}
 
-	// Create, set database into the shared config
 	dbQueries := database.New(db)
 
+	// Determine execution platform (dev, qa, prod)
+	platform := os.Getenv("PLATFORM")
+
+	// Set values into config
 	cfg := &apiConfig{
-		db: dbQueries,
+		db:       dbQueries,
+		platform: platform,
 	}
 	cfg.fileServerHits.Store(0)
 
