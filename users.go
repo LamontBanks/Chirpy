@@ -48,17 +48,17 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 			UpdatedAt: time.Now(),
 		})
 
+		if err != nil {
+			msg := fmt.Sprintf("Unable to create user with email %v", reqBody.Email)
+			sendErrorResponse(w, msg, 500, err)
+		}
+
 		// Map from database.User to custom User type
 		user := User{
 			ID:        dbUser.ID,
 			Email:     dbUser.Email,
 			CreatedAt: dbUser.CreatedAt,
 			UpdatedAt: dbUser.UpdatedAt,
-		}
-
-		if err != nil {
-			msg := fmt.Sprintf("Unable to create user with email %v", reqBody.Email)
-			sendErrorResponse(w, msg, 500, err)
 		}
 
 		// Success Response
