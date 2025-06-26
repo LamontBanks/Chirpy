@@ -28,13 +28,12 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 		reqBody := requestBody{}
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&reqBody)
-
-		// Validate request values
 		if err != nil {
 			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
+		// Validate request
 		if reqBody.Email == "" {
 			sendErrorResponse(w, "Email must not be blank", http.StatusBadRequest, nil)
 			return
