@@ -41,12 +41,20 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 		}
 
 		// Create user
-		user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
+		dbUser, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
 			ID:        uuid.New(),
 			Email:     reqBody.Email,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		})
+
+		// Map from database.User to custom User type
+		user := User{
+			ID:        dbUser.ID,
+			Email:     dbUser.Email,
+			CreatedAt: dbUser.CreatedAt,
+			UpdatedAt: dbUser.UpdatedAt,
+		}
 
 		if err != nil {
 			msg := fmt.Sprintf("Unable to create user with email %v", reqBody.Email)

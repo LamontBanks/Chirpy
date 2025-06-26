@@ -7,3 +7,9 @@ VALUES (
     $4
 )
 RETURNING *;
+
+-- name: CountUsers :one
+SELECT COUNT(*) FROM users;
+
+-- name: DeleteUsers :exec
+DELETE FROM users *;

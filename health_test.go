@@ -10,7 +10,7 @@ func TestHealthHandler(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	recorder := httptest.NewRecorder()
 
-	HealthHandler(recorder, request)
+	healthHandler(recorder, request)
 
 	assertEqual(recorder.Result().StatusCode, http.StatusOK, request, t)
 }
