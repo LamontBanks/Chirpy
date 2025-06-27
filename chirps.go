@@ -109,3 +109,28 @@ func (cfg *apiConfig) getChirps() http.HandlerFunc {
 		SendJSONResponse(w, http.StatusOK, response)
 	}
 }
+
+func (cfg *apiConfig) getChirpByID() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Id is a path parameter
+		id, err := uuid.Parse(r.PathValue("chirpID"))
+		if err != nil {
+			sendErrorResponse(w, "Chirp not found", http.StatusNotFound, err)
+			return
+		}
+
+		foundChirp, err := cfg.db.GetChirpByID(r.Context(), id)
+		if err != nil {
+			sendErrorResponse(w, "Chirp not found", http.StatusNotFound, err)
+			return
+		}
+
+		SendJSONResponse(w, http.StatusOK, chirp{
+			ID:        foundChirp.ID,
+			CreatedAt: foundChirp.CreatedAt,
+			UpdatedAt: foundChirp.UpdatedAt,
+			Body:      foundChirp.Body,
+			UserID:    foundChirp.UserID,
+		})
+	}
+}
