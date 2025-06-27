@@ -55,6 +55,8 @@ func main() {
 
 	mux.HandleFunc("POST /api/validate_chirp", validateChirpHandler)
 	mux.HandleFunc("POST /api/users", cfg.createUserHandler())
+
+	mux.HandleFunc("GET /api/chirps", cfg.getChirps())
 	mux.HandleFunc("POST /api/chirps", cfg.postChirpHandler())
 
 	// Start server

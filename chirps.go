@@ -11,25 +11,24 @@ import (
 	"github.com/google/uuid"
 )
 
+type chirp struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Body      string    `json:"body"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
 // Receives text from the users, saves it, and returns the a chirp
 func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Request, response format
-		type postChirpRequest struct {
+		type request struct {
 			Body   string    `json:"body"`
 			UserID uuid.UUID `json:"user_id"`
 		}
 
-		type postChirpResponse struct {
-			ChirpID   uuid.UUID `json:"id"`
-			CreatedAt time.Time `json:"created_at"`
-			UpdatedAt time.Time `json:"updated_at"`
-			Body      string    `json:"body"`
-			UserID    uuid.UUID `json:"user_id"`
-		}
-
 		// Decode request
-		reqBody := postChirpRequest{}
+		reqBody := request{}
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&reqBody)
 		if err != nil {
@@ -40,7 +39,7 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 		chirpText := reqBody.Body
 		userID := reqBody.UserID
 
-		// Check the user exists
+		// Check that the user exists
 		_, err = cfg.db.GetUser(r.Context(), userID)
 		if err == sql.ErrNoRows {
 			sendErrorResponse(w, "Invalid User", http.StatusBadRequest, fmt.Errorf("invalid user %v attempted to post", userID))
@@ -76,12 +75,37 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 		}
 
 		// Response
-		SendJSONResponse(w, http.StatusCreated, postChirpResponse{
-			ChirpID:   savedChirp.ID,
+		SendJSONResponse(w, http.StatusCreated, chirp{
+			ID:        savedChirp.ID,
 			CreatedAt: savedChirp.CreatedAt,
 			UpdatedAt: savedChirp.UpdatedAt,
 			UserID:    savedChirp.UserID,
 			Body:      savedChirp.Body,
 		})
+	}
+}
+
+func (cfg *apiConfig) getChirps() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := []chirp{}
+
+		// Gets in ascendaing order by created_at
+		allChirps, err := cfg.db.GetChirps(r.Context())
+		if err != nil {
+			sendErrorResponse(w, "Failed to gets all chirps", http.StatusInternalServerError, err)
+			return
+		}
+
+		for _, c := range allChirps {
+			response = append(response, chirp{
+				ID:        c.ID,
+				CreatedAt: c.CreatedAt,
+				UpdatedAt: c.UpdatedAt,
+				Body:      c.Body,
+				UserID:    c.UserID,
+			})
+		}
+
+		SendJSONResponse(w, http.StatusOK, response)
 	}
 }
