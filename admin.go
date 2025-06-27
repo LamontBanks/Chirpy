@@ -13,7 +13,7 @@ func (cfg *apiConfig) deleteUsersHandler() http.HandlerFunc {
 
 		// CRITICAL: Delete All Users only allowed in dev environment
 		if cfg.platform != "dev" {
-			sendErrorResponse(w, "Cannot DELETE in non-dev environment", http.StatusForbidden, fmt.Errorf("Attempted to DELETE in non-dev region"))
+			sendErrorResponse(w, "cannot DELETE in non-dev environment", http.StatusForbidden, fmt.Errorf("attempted to DELETE in non-dev region"))
 			return
 		}
 

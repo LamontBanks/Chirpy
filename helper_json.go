@@ -21,22 +21,6 @@ func sendErrorResponse(w http.ResponseWriter, msg string, statusCode int, errorT
 	SendJSONResponse(w, statusCode, errorResp)
 }
 
-func sendSuccessResponse(w http.ResponseWriter, msg string, statusCode int, msgToLog string) {
-	if msgToLog != "" {
-		log.Printf("%v", msgToLog)
-	}
-
-	type successResponseJSON struct {
-		Result string `json:"result"`
-	}
-
-	successResp := successResponseJSON{
-		Result: msg,
-	}
-
-	SendJSONResponse(w, statusCode, successResp)
-}
-
 func SendJSONResponse(w http.ResponseWriter, statusCode int, jsonStruct interface{}) {
 	data, err := json.Marshal(jsonStruct)
 	if err != nil {

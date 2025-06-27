@@ -66,3 +66,14 @@ func (q *Queries) DeleteUsers(ctx context.Context) error {
 	_, err := q.db.ExecContext(ctx, deleteUsers)
 	return err
 }
+
+const getUser = `-- name: GetUser :one
+SELECT id FROM users
+WHERE id = $1
+`
+
+func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, getUser, id)
+	err := row.Scan(&id)
+	return id, err
+}

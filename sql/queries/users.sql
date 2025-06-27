@@ -13,3 +13,7 @@ SELECT COUNT(*) FROM users;
 
 -- name: DeleteUsers :exec
 DELETE FROM users *;
+
+-- name: GetUser :one
+SELECT id FROM users
+WHERE id = $1;
