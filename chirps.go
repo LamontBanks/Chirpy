@@ -112,7 +112,6 @@ func (cfg *apiConfig) getChirps() http.HandlerFunc {
 
 func (cfg *apiConfig) getChirpByID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Id is a path parameter
 		id, err := uuid.Parse(r.PathValue("chirpID"))
 		if err != nil {
 			sendErrorResponse(w, "Chirp not found", http.StatusNotFound, err)
