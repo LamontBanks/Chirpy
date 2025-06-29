@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/LamontBanks/Chirpy/internal/auth"
 	"github.com/LamontBanks/Chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -21,7 +22,8 @@ type User struct {
 func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		type requestBody struct {
-			Email string `json:"email"`
+			Password string `json:"password"`
+			Email    string `json:"email"`
 		}
 
 		// Decode request
@@ -39,12 +41,24 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 			return
 		}
 
+		if reqBody.Password == "" {
+			sendErrorResponse(w, "Password required", http.StatusBadRequest, nil)
+			return
+		}
+
+		// Secure password
+		hashedPassword, err := auth.HashPassword(reqBody.Password)
+		if err != nil {
+			sendErrorResponse(w, "Invalid Password", http.StatusBadRequest, err)
+		}
+
 		// Create user
 		dbUser, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
-			ID:        uuid.New(),
-			Email:     reqBody.Email,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			ID:             uuid.New(),
+			Email:          reqBody.Email,
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
+			HashedPassword: hashedPassword,
 		})
 
 		if err != nil {

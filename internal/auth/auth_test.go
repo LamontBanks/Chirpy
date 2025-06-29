@@ -28,6 +28,17 @@ func TestHashPassword(t *testing.T) {
 	assertNotEqual(actual1, actual2, input, t)
 }
 
+func TestCheckPassword(t *testing.T) {
+	// Verify plaintext password matches hashed password
+	plaintextPassword := "abc123password"
+	hashedPassword, err := HashPassword(plaintextPassword)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	assertEqual(CheckPasswordHash(plaintextPassword, hashedPassword), nil, nil, t)
+}
+
 func assertEqual(first, second, input any, t *testing.T) {
 	if first != second {
 		t.Errorf("\nInput:\n\t%v\nActual:\n\t%v\nExpected:\n\t%v", input, first, second)
