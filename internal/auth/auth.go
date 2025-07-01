@@ -85,20 +85,20 @@ func ValidateToken(tokenString, tokenSecret string) (uuid.UUID, error) {
 }
 
 func GetBearerToken(header http.Header) (string, error) {
-	tokenString := header.Get("Authorization")
+	bearerToken := header.Get("Authorization")
 
-	if tokenString == "" {
+	if bearerToken == "" {
 		return "", fmt.Errorf("authorization header value not found")
 	}
 
 	// Included whitespace in split is intentional
-	splitTokenString := strings.Split("Bearer ", tokenString)
+	splitBearerToken := strings.Split(bearerToken, "Bearer ")
 
-	if len(splitTokenString) < 2 {
+	if len(splitBearerToken) < 2 {
 		return "", fmt.Errorf("invalid authorization header value")
 	}
 
-	bearerToken := strings.TrimSpace(splitTokenString[1])
+	bearerToken = strings.TrimSpace(splitBearerToken[1])
 
 	return bearerToken, nil
 }

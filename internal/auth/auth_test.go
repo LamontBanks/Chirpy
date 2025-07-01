@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -139,6 +140,41 @@ func TestValidateTokenRejectWrongTokenSecret(t *testing.T) {
 			t.Errorf("missing expected invalid tokenSecret error: '%v'", expectedErrors[i])
 		}
 	}
+}
+
+func TestGetBearerToken(t *testing.T) {
+	// Extract correctly set bearer token
+	expectedBearerToken := "abc123"
+
+	header := httptest.NewRecorder().Header()
+	header.Add("Authorization", "Bearer "+expectedBearerToken)
+
+	actualToken, err := GetBearerToken(header)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	assertEqual(actualToken, expectedBearerToken, header, t)
+}
+
+func TestGetBearerTokenErrorIfNotSet(t *testing.T) {
+	expectedBearerToken := ""
+	header := httptest.NewRecorder().Header()
+
+	// 1. Missing "Bearer " prefix, return an error
+	header.Add("Authorization", expectedBearerToken)
+	_, err := GetBearerToken(header)
+	assertNotEqual(err, nil, header, t)
+
+	// 2. Misformatted Bearer prefix (no space)
+	header.Set("Authorization", "Bearer"+expectedBearerToken)
+	_, err = GetBearerToken(header)
+	assertNotEqual(err, nil, header, t)
+
+	// 3. Missing token
+	header.Set("Authorization", "Bearer")
+	_, err = GetBearerToken(header)
+	assertNotEqual(err, nil, header, t)
 }
 
 func assertEqual(first, second, input any, t *testing.T) {
