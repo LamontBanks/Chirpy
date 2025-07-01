@@ -2,6 +2,8 @@ package auth
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -80,4 +82,23 @@ func ValidateToken(tokenString, tokenSecret string) (uuid.UUID, error) {
 	}
 
 	return userId, nil
+}
+
+func GetBearerToken(header http.Header) (string, error) {
+	tokenString := header.Get("Authorization")
+
+	if tokenString == "" {
+		return "", fmt.Errorf("authorization header value not found")
+	}
+
+	// Included whitespace in split is intentional
+	splitTokenString := strings.Split("Bearer ", tokenString)
+
+	if len(splitTokenString) < 2 {
+		return "", fmt.Errorf("invalid authorization header value")
+	}
+
+	bearerToken := strings.TrimSpace(splitTokenString[1])
+
+	return bearerToken, nil
 }
