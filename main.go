@@ -19,30 +19,11 @@ type apiConfig struct {
 	fileServerHits atomic.Int32
 	db             *database.Queries
 	platform       string
+	jwtSecret      string
 }
 
 func main() {
-
-	godotenv.Load() // .env at root
-
-	// Initialize database
-	dbURL := os.Getenv("DB_URL")
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		panic("Error connecting to the database")
-	}
-
-	dbQueries := database.New(db)
-
-	// Determine execution platform (dev, qa, prod)
-	platform := os.Getenv("PLATFORM")
-
-	// Set values into config
-	cfg := &apiConfig{
-		db:       dbQueries,
-		platform: platform,
-	}
-	cfg.fileServerHits.Store(0)
+	cfg := initApiConfig()
 
 	// Set Endpoints
 	mux := http.NewServeMux()
@@ -95,4 +76,33 @@ func (cfg *apiConfig) resetMetricsHandler(w http.ResponseWriter, r *http.Request
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(http.StatusText(http.StatusOK)))
+}
+
+func initApiConfig() *apiConfig {
+	godotenv.Load() // .env at root
+
+	// Initialize database
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		panic("Error connecting to the database")
+	}
+	dbQueries := database.New(db)
+
+	// Determine execution platform (dev, qa, prod)
+	platform := os.Getenv("PLATFORM")
+
+	// Grab JWT info
+	jwtSecret := os.Getenv("JWT_SECRET")
+
+	// Set values into config
+	cfg := &apiConfig{
+		db:        dbQueries,
+		platform:  platform,
+		jwtSecret: jwtSecret,
+	}
+
+	cfg.fileServerHits.Store(0)
+
+	return cfg
 }

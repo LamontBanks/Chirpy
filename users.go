@@ -35,7 +35,7 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 			return
 		}
 
-		// Validate request
+		// Check for required elements
 		if reqBody.Email == "" {
 			sendErrorResponse(w, "Email must not be blank", http.StatusBadRequest, nil)
 			return
@@ -46,7 +46,7 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 			return
 		}
 
-		// Secure password
+		// Save password
 		hashedPassword, err := auth.HashPassword(reqBody.Password)
 		if err != nil {
 			sendErrorResponse(w, "Invalid Password", http.StatusBadRequest, err)
