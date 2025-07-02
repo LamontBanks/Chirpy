@@ -14,7 +14,7 @@ func TestCensoredBannedWords(t *testing.T) {
 
 	actual := censoredBannedWords(input)
 
-	assertEqual(expected, actual, input, t)
+	assertEqual(actual, expected, input, t)
 }
 
 func TestAllBannedWords(t *testing.T) {
@@ -74,6 +74,6 @@ func TestTooLongChirp(t *testing.T) {
 
 func assertEqual(actual, expected, input any, t *testing.T) {
 	if actual != expected {
-		t.Errorf("\nInput:\n\t%v\nActual:\n\t%v\nExpected:\n\t%v", input, actual, expected)
+		t.Errorf("\nActual:\n\t%v\nExpected:\n\t%v\nInput:\n\t%v", actual, expected, input)
 	}
 }
