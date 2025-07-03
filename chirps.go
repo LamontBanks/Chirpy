@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/LamontBanks/Chirpy/internal/auth"
 	"github.com/LamontBanks/Chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
 type chirp struct {
+	Token     string    `json:"token"`
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -23,34 +25,46 @@ type chirp struct {
 func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		type request struct {
-			Body   string    `json:"body"`
-			UserID uuid.UUID `json:"user_id"`
+			Body string `json:"body"`
 		}
 
-		// Decode request
-		reqBody := request{}
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&reqBody)
+		// Validate Authorization Token
+		// 1. Token exists
+		token, err := auth.GetBearerToken(r.Header)
+		if err != nil {
+			sendErrorResponse(w, "Invalid JWT", http.StatusUnauthorized, err)
+			return
+		}
+
+		// 2. Token is valid (not expired, etc.)
+		userIDFromToken, err := auth.ValidateToken(token, cfg.jwtSecret)
+		if err != nil {
+			sendErrorResponse(w, "Invalid JWT", http.StatusUnauthorized, err)
+			return
+		}
+
+		// 3. Token is associated with a registered user
+		_, err = cfg.db.GetUser(r.Context(), userIDFromToken)
+		if err == sql.ErrNoRows {
+			sendErrorResponse(w, "Invalid User", http.StatusBadRequest, fmt.Errorf("invalid user %v", userIDFromToken))
+			return
+		}
 		if err != nil {
 			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
-		chirpText := reqBody.Body
-		userID := reqBody.UserID
-
-		// Check that the user exists
-		_, err = cfg.db.GetUser(r.Context(), userID)
-		if err == sql.ErrNoRows {
-			sendErrorResponse(w, "Invalid User", http.StatusBadRequest, fmt.Errorf("invalid user %v attempted to post", userID))
-			return
-		}
+		// Decode request to validate body parameters
+		reqBody := request{}
+		decoder := json.NewDecoder(r.Body)
+		err = decoder.Decode(&reqBody)
 		if err != nil {
 			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		// Validate submitted text
+		chirpText := reqBody.Body
 		if len(chirpText) == 0 {
 			sendErrorResponse(w, "Chirp cannot be empty", http.StatusBadRequest, nil)
 			return
@@ -66,7 +80,7 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 			ID:        uuid.New(),
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
-			UserID:    userID,
+			UserID:    userIDFromToken,
 			Body:      chirpText,
 		})
 		if err != nil {

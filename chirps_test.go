@@ -1,0 +1,110 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+)
+
+func TestPostChirp(t *testing.T) {
+	cfg := initApiConfig()
+
+	// Deleting users also cascade deletes all posts
+	deleteAllUsers(cfg, t)
+
+	// Create new user
+	email := "fakeuser@email.com"
+	password := "abc123password!"
+	createUserBody := fmt.Sprintf(`{"email": "%v", "password": "%v"}`, email, password)
+
+	_, _, err := createTestUser(cfg, createUserBody)
+	if err != nil {
+		t.Errorf("failed to create user %v: %v", createUserBody, err)
+		t.FailNow()
+	}
+
+	// Log in, get the JWT token required for posting
+	expiresInSeconds := 300
+	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v", "expires_in_seconds": %v}`, email, password, expiresInSeconds)
+	request := httptest.NewRequest("POST", "/api/login", strings.NewReader(loginUserBody))
+
+	w := httptest.NewRecorder()
+	cfg.handlerLogin()(w, request)
+
+	// Read response
+	loggedInUser := &LoginResponse{}
+	decoder := json.NewDecoder(w.Result().Body)
+	err = decoder.Decode(&loggedInUser)
+	if err != nil {
+		t.Errorf("%v", err)
+		t.FailNow()
+	}
+
+	// Create chirp, including the auth token
+	chirp := `{"body": "Hello world"}`
+	chirpRequest := httptest.NewRequest("POST", "/api/chirp", strings.NewReader(chirp))
+	chirpRequest.Header.Add("Authorization", "Bearer "+loggedInUser.Token)
+
+	// Post chirp, check response
+	w = httptest.NewRecorder()
+	cfg.postChirpHandler()(w, chirpRequest)
+
+	if w.Result().StatusCode != http.StatusCreated {
+		t.Errorf("POST /api/chirp/ with auth token failed, response: %v, expected: %v", w.Result().StatusCode, http.StatusCreated)
+	}
+}
+
+func TestPostChirpRejectExpiredAUthTokens(t *testing.T) {
+	cfg := initApiConfig()
+
+	// Deleting users also cascade deletes all posts
+	deleteAllUsers(cfg, t)
+
+	// Create new user
+	email := "fakeuser@email.com"
+	password := "abc123password!"
+	createUserBody := fmt.Sprintf(`{"email": "%v", "password": "%v"}`, email, password)
+
+	_, _, err := createTestUser(cfg, createUserBody)
+	if err != nil {
+		t.Errorf("failed to create user %v: %v", createUserBody, err)
+		t.FailNow()
+	}
+
+	// Log in, get the JWT token required for posting, set very short expiration time
+	expiresInSeconds := 1
+	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v", "expires_in_seconds": %v}`, email, password, expiresInSeconds)
+	request := httptest.NewRequest("POST", "/api/login", strings.NewReader(loginUserBody))
+
+	w := httptest.NewRecorder()
+	cfg.handlerLogin()(w, request)
+
+	wait, _ := time.ParseDuration("2s")
+	time.Sleep(wait)
+
+	// Read response
+	loggedInUser := &LoginResponse{}
+	decoder := json.NewDecoder(w.Result().Body)
+	err = decoder.Decode(&loggedInUser)
+	if err != nil {
+		t.Errorf("%v", err)
+		t.FailNow()
+	}
+
+	// Create chirp, including the auth token
+	chirp := `{"body": "Hello world"}`
+	chirpRequest := httptest.NewRequest("POST", "/api/chirp", strings.NewReader(chirp))
+	chirpRequest.Header.Add("Authorization", "Bearer "+loggedInUser.Token)
+
+	// Post chirp, check response
+	w = httptest.NewRecorder()
+	cfg.postChirpHandler()(w, chirpRequest)
+
+	if w.Result().StatusCode != http.StatusUnauthorized {
+		t.Errorf("POST /api/chirp/ with auth token failed, response: %v, expected: %v", w.Result().StatusCode, http.StatusCreated)
+	}
+}

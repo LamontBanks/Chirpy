@@ -21,7 +21,7 @@ func sendErrorResponse(w http.ResponseWriter, msg string, statusCode int, errorT
 	SendJSONResponse(w, statusCode, errorResp)
 }
 
-func SendJSONResponse(w http.ResponseWriter, statusCode int, jsonStruct interface{}) {
+func SendJSONResponse(w http.ResponseWriter, statusCode int, jsonStruct any) {
 	data, err := json.Marshal(jsonStruct)
 	if err != nil {
 		log.Printf("%v", err)
@@ -31,9 +31,7 @@ func SendJSONResponse(w http.ResponseWriter, statusCode int, jsonStruct interfac
 
 	w.Header().Set("Content-Type", "application/json")
 
-	if statusCode != http.StatusOK {
-		w.WriteHeader(statusCode)
-	}
+	w.WriteHeader(statusCode)
 
 	w.Write(data)
 }

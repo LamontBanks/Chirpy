@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -48,16 +49,19 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 			return
 		}
 
-		// Default to 1 hour token expiration; use client-provided expiration if it follows within bounds
+		// Default to 1 hour token expiration; use client-provided expiration if it falls within bounds
 		tokenExpirationDuration, err := time.ParseDuration("1h")
+		if err != nil {
+			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			return
+		}
 
-		secondsInHour := time.Hour / time.Second
-		if reqBody.ExpiresInSeconds > 0 && reqBody.ExpiresInSeconds <= int(secondsInHour.Seconds()) {
+		if reqBody.ExpiresInSeconds > 0 && reqBody.ExpiresInSeconds <= int(tokenExpirationDuration.Seconds()) {
 			d := strconv.Itoa(reqBody.ExpiresInSeconds)
 			tokenExpirationDuration, err = time.ParseDuration(d + "s")
 
 			if err != nil {
-				sendErrorResponse(w, "Invalid 'expires_in_seconds' value", http.StatusBadRequest, nil)
+				sendErrorResponse(w, fmt.Sprintf("Invalid expires_in_seconds value: %v", reqBody.ExpiresInSeconds), http.StatusBadRequest, nil)
 				return
 			}
 		}
