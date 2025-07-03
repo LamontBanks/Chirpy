@@ -2,21 +2,21 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/LamontBanks/Chirpy/internal/auth"
+	"github.com/LamontBanks/Chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
 type LoginResponse struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-	Token     string    `json:"token"`
+	ID           uuid.UUID `json:"id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Email        string    `json:"email"`
+	Token        string    `json:"token"`
+	RefreshToken string    `json:"refresh_token"`
 }
 
 func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
@@ -24,9 +24,6 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 		type requestBody struct {
 			Password string `json:"password"`
 			Email    string `json:"email"`
-
-			// Optional
-			ExpiresInSeconds int `json:"expires_in_seconds"`
 		}
 
 		// Decode request
@@ -49,23 +46,6 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 			return
 		}
 
-		// Default to 1 hour token expiration; use client-provided expiration if it falls within bounds
-		tokenExpirationDuration, err := time.ParseDuration("1h")
-		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
-			return
-		}
-
-		if reqBody.ExpiresInSeconds > 0 && reqBody.ExpiresInSeconds <= int(tokenExpirationDuration.Seconds()) {
-			d := strconv.Itoa(reqBody.ExpiresInSeconds)
-			tokenExpirationDuration, err = time.ParseDuration(d + "s")
-
-			if err != nil {
-				sendErrorResponse(w, fmt.Sprintf("Invalid expires_in_seconds value: %v", reqBody.ExpiresInSeconds), http.StatusBadRequest, nil)
-				return
-			}
-		}
-
 		// Check user password
 		user, err := cfg.db.GetUserByEmail(r.Context(), reqBody.Email)
 		if err != nil {
@@ -79,8 +59,39 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 			return
 		}
 
-		// Create a new JWT token
-		token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, tokenExpirationDuration)
+		// 1 hour token JWT token
+		tokenDuration, err := time.ParseDuration("1h")
+		if err != nil {
+			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			return
+		}
+
+		token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, tokenDuration)
+		if err != nil {
+			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			return
+		}
+
+		// Create 60 day refresh token, save to database
+		refreshTokenDuration, err := time.ParseDuration("1440h")
+		if err != nil {
+			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			return
+		}
+
+		refreshToken, err := auth.MakeRefreshToken()
+		if err != nil {
+			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			return
+		}
+
+		err = cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+			Token:     refreshToken,
+			UserID:    user.ID,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			ExpiresAt: time.Now().Add(refreshTokenDuration),
+		})
 		if err != nil {
 			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
@@ -88,11 +99,12 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 
 		// Response
 		SendJSONResponse(w, 200, LoginResponse{
-			ID:        user.ID,
-			Email:     user.Email,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Token:     token,
+			ID:           user.ID,
+			Email:        user.Email,
+			CreatedAt:    user.CreatedAt,
+			UpdatedAt:    user.UpdatedAt,
+			Token:        token,
+			RefreshToken: refreshToken,
 		})
 	}
 }

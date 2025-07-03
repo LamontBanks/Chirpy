@@ -28,8 +28,7 @@ func TestPostChirp(t *testing.T) {
 	}
 
 	// Log in, get the JWT token required for posting
-	expiresInSeconds := 300
-	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v", "expires_in_seconds": %v}`, email, password, expiresInSeconds)
+	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v"}`, email, password)
 	request := httptest.NewRequest("POST", "/api/login", strings.NewReader(loginUserBody))
 
 	w := httptest.NewRecorder()
@@ -58,7 +57,7 @@ func TestPostChirp(t *testing.T) {
 	}
 }
 
-func TestPostChirpRejectExpiredAUthTokens(t *testing.T) {
+func TestPostChirpRejectExpiredAuthTokens(t *testing.T) {
 	cfg := initApiConfig()
 
 	// Deleting users also cascade deletes all posts
@@ -76,8 +75,7 @@ func TestPostChirpRejectExpiredAUthTokens(t *testing.T) {
 	}
 
 	// Log in, get the JWT token required for posting, set very short expiration time
-	expiresInSeconds := 1
-	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v", "expires_in_seconds": %v}`, email, password, expiresInSeconds)
+	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v"}`, email, password)
 	request := httptest.NewRequest("POST", "/api/login", strings.NewReader(loginUserBody))
 
 	w := httptest.NewRecorder()

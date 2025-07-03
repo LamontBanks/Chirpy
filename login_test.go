@@ -27,8 +27,7 @@ func TestLogin(t *testing.T) {
 	}
 
 	// Login
-	expiresInSeconds := 300
-	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v", "expires_in_seconds": %v}`, email, password, expiresInSeconds)
+	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v"}`, email, password)
 	request := httptest.NewRequest("POST", "/api/login", strings.NewReader(loginUserBody))
 	w := httptest.NewRecorder()
 
@@ -55,6 +54,10 @@ func TestLogin(t *testing.T) {
 
 	if loggedInUser.Token == "" {
 		t.Errorf("missing jwt token:\n\t%v", loggedInUser)
+	}
+
+	if loggedInUser.RefreshToken == "" {
+		t.Errorf("missing refresh token:\n\t%v", loggedInUser)
 	}
 }
 
