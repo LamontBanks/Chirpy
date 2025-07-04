@@ -25,7 +25,7 @@ type apiConfig struct {
 func main() {
 	cfg := initApiConfig()
 
-	// Set Endpoints
+	// Endpoints
 	mux := http.NewServeMux()
 
 	mux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
@@ -43,6 +43,7 @@ func main() {
 
 	mux.HandleFunc("POST /api/login", cfg.handlerLogin())
 	mux.HandleFunc("POST /api/refresh", cfg.handlerRefresh())
+	mux.HandleFunc("POST /api/revoke", cfg.handlerRevoke())
 
 	// Start server
 	server := &http.Server{

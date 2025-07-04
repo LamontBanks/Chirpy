@@ -70,3 +70,20 @@ func (q *Queries) GetRefreshTokenInfo(ctx context.Context, token string) (GetRef
 	)
 	return i, err
 }
+
+const setRefreshTokenRevokeAtTime = `-- name: SetRefreshTokenRevokeAtTime :exec
+UPDATE refresh_tokens
+SET revoked_at = $2, updated_at = $3
+WHERE token = $1
+`
+
+type SetRefreshTokenRevokeAtTimeParams struct {
+	Token     string
+	RevokedAt sql.NullTime
+	UpdatedAt time.Time
+}
+
+func (q *Queries) SetRefreshTokenRevokeAtTime(ctx context.Context, arg SetRefreshTokenRevokeAtTimeParams) error {
+	_, err := q.db.ExecContext(ctx, setRefreshTokenRevokeAtTime, arg.Token, arg.RevokedAt, arg.UpdatedAt)
+	return err
+}
