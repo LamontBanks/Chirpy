@@ -24,6 +24,7 @@ type CustomClaims struct {
 }
 
 const (
+	JWT_TOKEN_DURATION     = "1h"
 	REFRESH_TOKEN_DURATION = "1440h"
 )
 

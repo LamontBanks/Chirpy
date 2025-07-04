@@ -60,7 +60,7 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 		}
 
 		// 1 hour token JWT token
-		tokenDuration, err := time.ParseDuration("1h")
+		tokenDuration, err := time.ParseDuration(auth.JWT_TOKEN_DURATION)
 		if err != nil {
 			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return

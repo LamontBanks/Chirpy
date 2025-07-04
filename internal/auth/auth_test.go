@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/LamontBanks/Chirpy/internal/auth"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -50,7 +51,7 @@ func TestCheckPassword(t *testing.T) {
 func TestJWTGeneratesAToken(t *testing.T) {
 	userID := uuid.New()
 	tokenSecret := "acb123xyz!@#"
-	expiresIn, _ := time.ParseDuration("1h")
+	expiresIn, _ := time.ParseDuration(auth.JWT_TOKEN_DURATION)
 
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 
@@ -65,7 +66,7 @@ func TestValidateTokenExtractsUserID(t *testing.T) {
 	// Create token, embedding userID
 	userID := uuid.New()
 	tokenSecret := "acb123xyz!@#"
-	expiresIn, _ := time.ParseDuration("1h")
+	expiresIn, _ := time.ParseDuration(auth.JWT_TOKEN_DURATION)
 
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 	if err != nil {
@@ -118,7 +119,7 @@ func TestValidateTokenRejectWrongTokenSecret(t *testing.T) {
 	// Create new token with
 	userID := uuid.New()
 	tokenSecret := "acb123xyz!@#"
-	expiresIn, _ := time.ParseDuration("1h")
+	expiresIn, _ := time.ParseDuration(auth.JWT_TOKEN_DURATION)
 
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 	if err != nil {
