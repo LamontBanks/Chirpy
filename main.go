@@ -42,6 +42,7 @@ func main() {
 	mux.HandleFunc("POST /api/chirps", cfg.postChirpHandler())
 
 	mux.HandleFunc("POST /api/login", cfg.handlerLogin())
+	mux.HandleFunc("POST /api/refresh", cfg.handlerRefresh())
 
 	// Start server
 	server := &http.Server{

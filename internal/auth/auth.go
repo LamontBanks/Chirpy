@@ -23,6 +23,10 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
+const (
+	REFRESH_TOKEN_DURATION = "1440h"
+)
+
 // Returns `bcrypt`-hashed password
 func HashPassword(password string) (string, error) {
 	passwordBytes := []byte(password)

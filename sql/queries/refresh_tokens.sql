@@ -7,3 +7,8 @@ VALUES (
     $4,
     $5
 );
+
+
+-- name: GetRefreshTokenInfo :one
+SELECT token, user_id, created_at, updated_at, expires_at, revoked_at FROM refresh_tokens
+WHERE token = $1;

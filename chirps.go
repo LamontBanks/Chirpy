@@ -32,14 +32,14 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 		// 1. Token exists
 		token, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			sendErrorResponse(w, "Invalid JWT", http.StatusUnauthorized, err)
+			sendErrorResponse(w, "Invalid Bearer Token", http.StatusUnauthorized, err)
 			return
 		}
 
 		// 2. Token is valid (not expired, etc.)
 		userIDFromToken, err := auth.ValidateToken(token, cfg.jwtSecret)
 		if err != nil {
-			sendErrorResponse(w, "Invalid JWT", http.StatusUnauthorized, err)
+			sendErrorResponse(w, "Invalid Bearer Token", http.StatusUnauthorized, err)
 			return
 		}
 

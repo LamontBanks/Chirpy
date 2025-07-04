@@ -73,7 +73,7 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 		}
 
 		// Create 60 day refresh token, save to database
-		refreshTokenDuration, err := time.ParseDuration("1440h")
+		refreshTokenDuration, err := time.ParseDuration(auth.REFRESH_TOKEN_DURATION)
 		if err != nil {
 			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
