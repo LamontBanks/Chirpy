@@ -91,6 +91,7 @@ func ValidateToken(tokenString, tokenSecret string) (uuid.UUID, error) {
 	return userId, nil
 }
 
+// Return the token from the `Authorization: Bearer <token>` header
 func GetBearerToken(header http.Header) (string, error) {
 	bearerToken := header.Get("Authorization")
 
