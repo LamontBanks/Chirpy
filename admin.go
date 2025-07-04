@@ -13,21 +13,21 @@ func (cfg *apiConfig) deleteUsersHandler() http.HandlerFunc {
 
 		// CRITICAL: Delete All Users only allowed in dev environment
 		if cfg.platform != "dev" {
-			sendErrorResponse(w, "cannot DELETE in non-dev environment", http.StatusForbidden, fmt.Errorf("attempted to DELETE in non-dev region"))
+			sendErrorJSONResponse(w, "cannot DELETE in non-dev environment", http.StatusForbidden, fmt.Errorf("attempted to DELETE in non-dev region"))
 			return
 		}
 
 		// Count users before delete
 		numUsers, err := cfg.db.CountUsers(r.Context())
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		// Delete users, log number deleted
 		err = cfg.db.DeleteUsers(r.Context())
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 

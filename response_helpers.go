@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func sendErrorResponse(w http.ResponseWriter, msg string, statusCode int, errorToLog error) {
+func sendErrorJSONResponse(w http.ResponseWriter, msg string, statusCode int, errorToLog error) {
 	if errorToLog != nil {
 		log.Printf("%v", errorToLog)
 	}
@@ -30,8 +30,15 @@ func SendJSONResponse(w http.ResponseWriter, statusCode int, jsonStruct any) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
 	w.WriteHeader(statusCode)
-
 	w.Write(data)
+}
+
+func SendResponse(w http.ResponseWriter, statusCode int, msgToLog string) {
+	if msgToLog != "" {
+		log.Printf("%v", msgToLog)
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(statusCode)
 }

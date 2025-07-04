@@ -31,57 +31,57 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&reqBody)
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		// Validate required fields
 		if reqBody.Email == "" {
-			sendErrorResponse(w, "Email must not be blank", http.StatusBadRequest, nil)
+			sendErrorJSONResponse(w, "Email must not be blank", http.StatusBadRequest, nil)
 			return
 		}
 
 		if reqBody.Password == "" {
-			sendErrorResponse(w, "Password required", http.StatusBadRequest, nil)
+			sendErrorJSONResponse(w, "Password required", http.StatusBadRequest, nil)
 			return
 		}
 
 		// Check user password
 		user, err := cfg.db.GetUserByEmail(r.Context(), reqBody.Email)
 		if err != nil {
-			sendErrorResponse(w, "incorrect email or password", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "incorrect email or password", http.StatusUnauthorized, err)
 			return
 		}
 
 		err = auth.CheckPasswordHash(reqBody.Password, user.HashedPassword)
 		if err != nil {
-			sendErrorResponse(w, "incorrect email or password", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "incorrect email or password", http.StatusUnauthorized, err)
 			return
 		}
 
 		// 1 hour token JWT token
 		tokenDuration, err := time.ParseDuration(auth.JWT_TOKEN_DURATION)
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, tokenDuration)
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		// Create 60 day refresh token, save to database
 		refreshTokenDuration, err := time.ParseDuration(auth.REFRESH_TOKEN_DURATION)
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		refreshToken, err := auth.MakeRefreshToken()
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
@@ -93,7 +93,7 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 			ExpiresAt: time.Now().Add(refreshTokenDuration),
 		})
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 

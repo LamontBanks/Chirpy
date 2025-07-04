@@ -31,25 +31,25 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&reqBody)
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		// Check for required elements
 		if reqBody.Email == "" {
-			sendErrorResponse(w, "Email must not be blank", http.StatusBadRequest, nil)
+			sendErrorJSONResponse(w, "Email must not be blank", http.StatusBadRequest, nil)
 			return
 		}
 
 		if reqBody.Password == "" {
-			sendErrorResponse(w, "Password required", http.StatusBadRequest, nil)
+			sendErrorJSONResponse(w, "Password required", http.StatusBadRequest, nil)
 			return
 		}
 
 		// Save password
 		hashedPassword, err := auth.HashPassword(reqBody.Password)
 		if err != nil {
-			sendErrorResponse(w, "Invalid Password", http.StatusBadRequest, err)
+			sendErrorJSONResponse(w, "Invalid Password", http.StatusBadRequest, err)
 		}
 
 		// Create user
@@ -63,7 +63,7 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 
 		if err != nil {
 			msg := fmt.Sprintf("Unable to create user with email %v", reqBody.Email)
-			sendErrorResponse(w, msg, 500, err)
+			sendErrorJSONResponse(w, msg, 500, err)
 		}
 
 		// Map from database.User to custom User type

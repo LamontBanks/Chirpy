@@ -24,12 +24,12 @@ func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate chirp
 	if err != nil {
-		sendErrorResponse(w, "Something went wrong", 500, err)
+		sendErrorJSONResponse(w, "Something went wrong", 500, err)
 		return
 	}
 
 	if len(req.Body) == 0 {
-		sendErrorResponse(w, "Something went wrong", 400, nil)
+		sendErrorJSONResponse(w, "Something went wrong", 400, nil)
 		return
 	}
 
@@ -39,7 +39,7 @@ func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 		SendJSONResponse(w, http.StatusOK, resp)
 		return
 	} else {
-		sendErrorResponse(w, "Chirp is too long", 400, nil)
+		sendErrorJSONResponse(w, "Chirp is too long", 400, nil)
 		return
 	}
 }

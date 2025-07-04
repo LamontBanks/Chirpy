@@ -32,25 +32,25 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 		// 1. Token exists
 		token, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			sendErrorResponse(w, "Invalid Bearer Token", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "Invalid Bearer Token", http.StatusUnauthorized, err)
 			return
 		}
 
 		// 2. Token is valid (not expired, etc.)
 		userIDFromToken, err := auth.ValidateToken(token, cfg.jwtSecret)
 		if err != nil {
-			sendErrorResponse(w, "Invalid Bearer Token", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "Invalid Bearer Token", http.StatusUnauthorized, err)
 			return
 		}
 
 		// 3. Token is associated with a registered user
 		_, err = cfg.db.GetUser(r.Context(), userIDFromToken)
 		if err == sql.ErrNoRows {
-			sendErrorResponse(w, "Invalid User", http.StatusBadRequest, fmt.Errorf("invalid user %v", userIDFromToken))
+			sendErrorJSONResponse(w, "Invalid User", http.StatusBadRequest, fmt.Errorf("invalid user %v", userIDFromToken))
 			return
 		}
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
@@ -59,18 +59,18 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 		decoder := json.NewDecoder(r.Body)
 		err = decoder.Decode(&reqBody)
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		// Validate submitted text
 		chirpText := reqBody.Body
 		if len(chirpText) == 0 {
-			sendErrorResponse(w, "Chirp cannot be empty", http.StatusBadRequest, nil)
+			sendErrorJSONResponse(w, "Chirp cannot be empty", http.StatusBadRequest, nil)
 			return
 		}
 		if len(chirpText) > 140 {
-			sendErrorResponse(w, "Chirp is too long", http.StatusBadRequest, nil)
+			sendErrorJSONResponse(w, "Chirp is too long", http.StatusBadRequest, nil)
 			return
 		}
 		chirpText = censoredBannedWords(chirpText)
@@ -84,7 +84,7 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 			Body:      chirpText,
 		})
 		if err != nil {
-			sendErrorResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
@@ -106,7 +106,7 @@ func (cfg *apiConfig) getChirps() http.HandlerFunc {
 		// Gets in ascendaing order by created_at
 		allChirps, err := cfg.db.GetChirps(r.Context())
 		if err != nil {
-			sendErrorResponse(w, "Failed to gets all chirps", http.StatusInternalServerError, err)
+			sendErrorJSONResponse(w, "Failed to gets all chirps", http.StatusInternalServerError, err)
 			return
 		}
 
@@ -128,13 +128,13 @@ func (cfg *apiConfig) getChirpByID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := uuid.Parse(r.PathValue("chirpID"))
 		if err != nil {
-			sendErrorResponse(w, "Chirp not found", http.StatusNotFound, err)
+			sendErrorJSONResponse(w, "Chirp not found", http.StatusNotFound, err)
 			return
 		}
 
 		foundChirp, err := cfg.db.GetChirpByID(r.Context(), id)
 		if err != nil {
-			sendErrorResponse(w, "Chirp not found", http.StatusNotFound, err)
+			sendErrorJSONResponse(w, "Chirp not found", http.StatusNotFound, err)
 			return
 		}
 
