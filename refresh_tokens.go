@@ -20,7 +20,7 @@ func (cfg *apiConfig) handlerRefresh() http.HandlerFunc {
 		// Get token from header
 		refreshToken, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			sendErrorJSONResponse(w, "Invalid Bearer Token", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, err)
 			return
 		}
 
@@ -29,7 +29,7 @@ func (cfg *apiConfig) handlerRefresh() http.HandlerFunc {
 
 		// 1. Refresh Token doesn't exist
 		if err == sql.ErrNoRows {
-			sendErrorJSONResponse(w, "Invalid bearer token", http.StatusUnauthorized, fmt.Errorf("refresh token %v doesn't exist: %v", refreshToken, err))
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, fmt.Errorf("refresh token %v doesn't exist: %v", refreshToken, err))
 			return
 		}
 		if err != nil {
@@ -73,18 +73,18 @@ func (cfg *apiConfig) handlerRevoke() http.HandlerFunc {
 		// Get token from header
 		refreshToken, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			sendErrorJSONResponse(w, "Invalid Bearer Token", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, err)
 			return
 		}
 
 		// Check if refresh token exists
 		existingRefreshTokenInfo, err := cfg.db.GetRefreshTokenInfo(r.Context(), refreshToken)
 		if err == sql.ErrNoRows {
-			sendErrorJSONResponse(w, "Invalid bearer token", http.StatusUnauthorized, fmt.Errorf("refresh token %v doesn't exist: %v", refreshToken, err))
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, fmt.Errorf("refresh token %v doesn't exist: %v", refreshToken, err))
 			return
 		}
 		if err != nil {
-			SendResponse(w, http.StatusUnauthorized, err.Error())
+			sendResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
@@ -101,10 +101,10 @@ func (cfg *apiConfig) handlerRevoke() http.HandlerFunc {
 			UpdatedAt: time.Now(),
 		})
 		if err != nil {
-			SendResponse(w, http.StatusInternalServerError, err.Error())
+			sendResponse(w, http.StatusInternalServerError, err.Error())
 		}
 
 		// Response
-		SendResponse(w, http.StatusNoContent, "")
+		sendResponse(w, http.StatusNoContent, "")
 	}
 }

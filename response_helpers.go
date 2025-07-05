@@ -34,7 +34,7 @@ func SendJSONResponse(w http.ResponseWriter, statusCode int, jsonStruct any) {
 	w.Write(data)
 }
 
-func SendResponse(w http.ResponseWriter, statusCode int, msgToLog string) {
+func sendResponse(w http.ResponseWriter, statusCode int, msgToLog string) {
 	if msgToLog != "" {
 		log.Printf("%v", msgToLog)
 	}

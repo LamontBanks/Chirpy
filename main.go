@@ -39,6 +39,7 @@ func main() {
 
 	mux.HandleFunc("GET /api/chirps", cfg.getChirps())
 	mux.HandleFunc("GET /api/chirps/{chirpID}", cfg.getChirpByID())
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", cfg.deleteChirpHandler())
 	mux.HandleFunc("POST /api/chirps", cfg.postChirpHandler())
 	mux.HandleFunc("POST /api/validate_chirp", validateChirpHandler)
 

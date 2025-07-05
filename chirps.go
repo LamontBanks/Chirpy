@@ -31,14 +31,14 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 		// 1. Token exists
 		token, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			sendErrorJSONResponse(w, "Invalid Bearer Token", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, err)
 			return
 		}
 
 		// 2. Token is valid (not expired, etc.)
 		userIDFromToken, err := auth.ValidateToken(token, cfg.jwtSecret)
 		if err != nil {
-			sendErrorJSONResponse(w, "Invalid Bearer Token", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, err)
 			return
 		}
 
@@ -144,5 +144,55 @@ func (cfg *apiConfig) getChirpByID() http.HandlerFunc {
 			Body:      foundChirp.Body,
 			UserID:    foundChirp.UserID,
 		})
+	}
+}
+
+func (cfg *apiConfig) deleteChirpHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Get the chirpID, check if it exists
+		chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+		if err != nil {
+			sendErrorJSONResponse(w, "Chirp not found", http.StatusNotFound, err)
+			return
+		}
+
+		chirp, err := cfg.db.GetChirpByID(r.Context(), chirpID)
+		if err == sql.ErrNoRows {
+			sendErrorJSONResponse(w, "Chirp not found", http.StatusNotFound, err)
+			return
+		}
+		if err != nil && err != sql.ErrNoRows {
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			return
+		}
+
+		// Get userID from auth token
+		token, err := auth.GetBearerToken(r.Header)
+		if err != nil {
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, err)
+			return
+		}
+
+		userIDFromToken, err := auth.ValidateToken(token, cfg.jwtSecret)
+		if err != nil {
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, err)
+			return
+		}
+
+		// Verify the chirp was made by the user
+		if userIDFromToken != chirp.UserID {
+			sendResponse(w, http.StatusForbidden, fmt.Sprintf("user %v tried deleting unowned chirp %v", userIDFromToken, chirp))
+			return
+		}
+
+		// Delete Chirp
+		deletedChirp, err := cfg.db.DeleteChirpByID(r.Context(), chirpID)
+		if err != nil {
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
+			return
+		}
+
+		// Response
+		sendResponse(w, http.StatusNoContent, fmt.Sprintf("user %v deleted chirp %v", userIDFromToken, deletedChirp.ID))
 	}
 }

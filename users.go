@@ -92,13 +92,13 @@ func (cfg *apiConfig) updateUserHandler() http.HandlerFunc {
 		// Read userID from the auth token
 		token, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			sendErrorJSONResponse(w, "Invalid bearer token", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, err)
 			return
 		}
 
 		userID, err := auth.ValidateToken(token, cfg.jwtSecret)
 		if err != nil {
-			sendErrorJSONResponse(w, "Invalid bearer token", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, err)
 			return
 		}
 
