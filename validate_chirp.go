@@ -36,7 +36,7 @@ func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 	// "Chirps" must be 140 characters or fewer
 	if len(req.Body) <= 140 {
 		resp.Body = censoredBannedWords(req.Body)
-		SendJSONResponse(w, http.StatusOK, resp)
+		sendJSONResponse(w, http.StatusOK, resp)
 		return
 	} else {
 		sendErrorJSONResponse(w, "Chirp is too long", 400, nil)

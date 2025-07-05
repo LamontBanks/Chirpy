@@ -77,7 +77,7 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 		}
 
 		// Success Response
-		SendJSONResponse(w, http.StatusCreated, user)
+		sendJSONResponse(w, http.StatusCreated, user)
 	}
 }
 
@@ -92,13 +92,13 @@ func (cfg *apiConfig) updateUserHandler() http.HandlerFunc {
 		// Read userID from the auth token
 		token, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			sendErrorJSONResponse(w, "Invalid bearer token", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, err)
 			return
 		}
 
 		userID, err := auth.ValidateToken(token, cfg.jwtSecret)
 		if err != nil {
-			sendErrorJSONResponse(w, "Invalid bearer token", http.StatusUnauthorized, err)
+			sendErrorJSONResponse(w, "Invalid User", http.StatusUnauthorized, err)
 			return
 		}
 
@@ -139,7 +139,7 @@ func (cfg *apiConfig) updateUserHandler() http.HandlerFunc {
 		}
 
 		// Response
-		SendJSONResponse(w, http.StatusOK, User{
+		sendJSONResponse(w, http.StatusOK, User{
 			ID:        updatedUser.ID,
 			Email:     updatedUser.Email,
 			CreatedAt: updatedUser.CreatedAt,

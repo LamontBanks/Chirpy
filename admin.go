@@ -32,7 +32,7 @@ func (cfg *apiConfig) deleteUsersHandler() http.HandlerFunc {
 		}
 
 		// Response
-		SendJSONResponse(w, http.StatusOK, response{
+		sendJSONResponse(w, http.StatusOK, response{
 			Result: fmt.Sprintf("All %v users deleted", numUsers),
 		})
 	}

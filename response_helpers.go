@@ -18,10 +18,10 @@ func sendErrorJSONResponse(w http.ResponseWriter, msg string, statusCode int, er
 		Error: msg,
 	}
 
-	SendJSONResponse(w, statusCode, errorResp)
+	sendJSONResponse(w, statusCode, errorResp)
 }
 
-func SendJSONResponse(w http.ResponseWriter, statusCode int, jsonStruct any) {
+func sendJSONResponse(w http.ResponseWriter, statusCode int, jsonStruct any) {
 	data, err := json.Marshal(jsonStruct)
 	if err != nil {
 		log.Printf("%v", err)
@@ -34,7 +34,7 @@ func SendJSONResponse(w http.ResponseWriter, statusCode int, jsonStruct any) {
 	w.Write(data)
 }
 
-func SendResponse(w http.ResponseWriter, statusCode int, msgToLog string) {
+func sendResponse(w http.ResponseWriter, statusCode int, msgToLog string) {
 	if msgToLog != "" {
 		log.Printf("%v", msgToLog)
 	}

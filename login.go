@@ -98,7 +98,7 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 		}
 
 		// Response
-		SendJSONResponse(w, 200, LoginResponse{
+		sendJSONResponse(w, 200, LoginResponse{
 			ID:           user.ID,
 			Email:        user.Email,
 			CreatedAt:    user.CreatedAt,
