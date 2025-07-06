@@ -15,6 +15,9 @@ SET email = $2, hashed_password = $3, updated_at = $4
 WHERE id = $1
 RETURNING *;
 
+-- name: GetUsers :many
+SELECT * FROM users;
+
 -- name: CountUsers :one
 SELECT COUNT(*) FROM users;
 

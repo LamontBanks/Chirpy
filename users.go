@@ -151,3 +151,28 @@ func (cfg *apiConfig) updateUserHandler() http.HandlerFunc {
 
 	}
 }
+
+// Get all users
+func (cfg *apiConfig) getUsersHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		users := []User{}
+
+		usersFromDB, err := cfg.db.GetUsers(r.Context())
+		if err != nil {
+			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, fmt.Errorf("error getting all users: %v", err))
+			return
+		}
+
+		for _, user := range usersFromDB {
+			users = append(users, User{
+				ID:          user.ID,
+				Email:       user.Email,
+				CreatedAt:   user.CreatedAt,
+				UpdatedAt:   user.UpdatedAt,
+				IsChirpyRed: user.IsChirpyRed,
+			})
+		}
+
+		SendJSONResponse(w, http.StatusOK, users)
+	}
+}

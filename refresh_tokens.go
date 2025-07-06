@@ -53,7 +53,7 @@ func (cfg *apiConfig) handlerRefresh() http.HandlerFunc {
 		}
 
 		// Create, send new JWT token
-		jwtTokenDuration, err := time.ParseDuration(auth.JWT_TOKEN_DURATION)
+		jwtTokenDuration, _ := time.ParseDuration(auth.JWT_TOKEN_DURATION)
 		newJWTToken, err := auth.MakeJWT(refreshTokenInfo.UserID, cfg.jwtSecret, jwtTokenDuration)
 		if err != nil {
 			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
