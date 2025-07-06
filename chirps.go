@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type chirp struct {
+type Chirp struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -88,7 +88,7 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 		}
 
 		// Response
-		SendJSONResponse(w, http.StatusCreated, chirp{
+		SendJSONResponse(w, http.StatusCreated, Chirp{
 			ID:        savedChirp.ID,
 			CreatedAt: savedChirp.CreatedAt,
 			UpdatedAt: savedChirp.UpdatedAt,
@@ -100,7 +100,7 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 
 func (cfg *apiConfig) getChirps() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		response := []chirp{}
+		response := []Chirp{}
 
 		// Gets in ascendaing order by created_at
 		allChirps, err := cfg.db.GetChirps(r.Context())
@@ -110,7 +110,7 @@ func (cfg *apiConfig) getChirps() http.HandlerFunc {
 		}
 
 		for _, c := range allChirps {
-			response = append(response, chirp{
+			response = append(response, Chirp{
 				ID:        c.ID,
 				CreatedAt: c.CreatedAt,
 				UpdatedAt: c.UpdatedAt,
@@ -137,7 +137,7 @@ func (cfg *apiConfig) getChirpByID() http.HandlerFunc {
 			return
 		}
 
-		SendJSONResponse(w, http.StatusOK, chirp{
+		SendJSONResponse(w, http.StatusOK, Chirp{
 			ID:        foundChirp.ID,
 			CreatedAt: foundChirp.CreatedAt,
 			UpdatedAt: foundChirp.UpdatedAt,

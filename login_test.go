@@ -14,7 +14,7 @@ func TestLogin(t *testing.T) {
 	cfg := initApiConfig()
 
 	// Clear users, create new user
-	deleteAllUsers(cfg, t)
+	deleteAllUsersAndPosts(cfg, t)
 
 	email := "fakeuser@email.com"
 	password := "abc123password!"
@@ -65,7 +65,7 @@ func TestLoginDefaultTokenExpiration(t *testing.T) {
 	cfg := initApiConfig()
 
 	// Clear users, create new user
-	deleteAllUsers(cfg, t)
+	deleteAllUsersAndPosts(cfg, t)
 
 	// Create new user
 	email := "fakeuser@email.com"

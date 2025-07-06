@@ -12,8 +12,7 @@ import (
 func TestPostChirp(t *testing.T) {
 	cfg := initApiConfig()
 
-	// Deleting users also cascade deletes all posts
-	deleteAllUsers(cfg, t)
+	deleteAllUsersAndPosts(cfg, t)
 
 	// Create new user
 	email := "fakeuser@email.com"
@@ -42,7 +41,7 @@ func TestPostChirp(t *testing.T) {
 		t.FailNow()
 	}
 
-	// Create chirp, including the auth token
+	// Create chirp, pass the auth token
 	chirp := `{"body": "Hello world"}`
 	chirpRequest := httptest.NewRequest("POST", "/api/chirp", strings.NewReader(chirp))
 	chirpRequest.Header.Add("Authorization", "Bearer "+loggedInUser.Token)

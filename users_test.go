@@ -16,7 +16,7 @@ func TestUserCreation(t *testing.T) {
 	cfg := initApiConfig()
 
 	// Delete users from database
-	deleteAllUsers(cfg, t)
+	deleteAllUsersAndPosts(cfg, t)
 
 	// Create new user
 	input := `{"email": "fakeuser@email.com", "password": "abc123password!"}`
@@ -38,7 +38,7 @@ func TestUserCreation(t *testing.T) {
 	// TODO: Verify timestamps
 }
 
-func deleteAllUsers(cfg *apiConfig, t *testing.T) {
+func deleteAllUsersAndPosts(cfg *apiConfig, t *testing.T) {
 	if cfg.platform != "dev" {
 		t.Errorf("cannot call /api/reset in non-dev environment")
 		t.FailNow()
