@@ -17,6 +17,7 @@ type LoginResponse struct {
 	Email        string    `json:"email"`
 	Token        string    `json:"token"`
 	RefreshToken string    `json:"refresh_token"`
+	IsChirpyRed  bool      `json:"is_chirpy_red"`
 }
 
 func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
@@ -103,6 +104,7 @@ func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 			Email:        user.Email,
 			CreatedAt:    user.CreatedAt,
 			UpdatedAt:    user.UpdatedAt,
+			IsChirpyRed:  user.IsChirpyRed,
 			Token:        token,
 			RefreshToken: refreshToken,
 		})

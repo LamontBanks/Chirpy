@@ -12,10 +12,11 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID          uuid.UUID `json:"id"`
+	Email       string    `json:"email"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	IsChirpyRed bool      `json:"is_chirpy_red"`
 }
 
 // Wrap functions in a closure to get access to the database
@@ -70,10 +71,11 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 
 		// Map from database.User to custom User type
 		user := User{
-			ID:        dbUser.ID,
-			Email:     dbUser.Email,
-			CreatedAt: dbUser.CreatedAt,
-			UpdatedAt: dbUser.UpdatedAt,
+			ID:          dbUser.ID,
+			Email:       dbUser.Email,
+			CreatedAt:   dbUser.CreatedAt,
+			UpdatedAt:   dbUser.UpdatedAt,
+			IsChirpyRed: dbUser.IsChirpyRed,
 		}
 
 		// Success Response
@@ -140,10 +142,11 @@ func (cfg *apiConfig) updateUserHandler() http.HandlerFunc {
 
 		// Response
 		SendJSONResponse(w, http.StatusOK, User{
-			ID:        updatedUser.ID,
-			Email:     updatedUser.Email,
-			CreatedAt: updatedUser.CreatedAt,
-			UpdatedAt: updatedUser.UpdatedAt,
+			ID:          updatedUser.ID,
+			Email:       updatedUser.Email,
+			CreatedAt:   updatedUser.CreatedAt,
+			UpdatedAt:   updatedUser.UpdatedAt,
+			IsChirpyRed: updatedUser.IsChirpyRed,
 		})
 
 	}

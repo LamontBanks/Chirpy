@@ -47,6 +47,9 @@ func main() {
 	mux.HandleFunc("POST /api/refresh", cfg.handlerRefresh())
 	mux.HandleFunc("POST /api/revoke", cfg.handlerRevoke())
 
+	// Webhooks ("Polka" is a imaginary payment process)
+	mux.HandleFunc("POST /api/polka/webhooks", cfg.handlerUserUpgraded())
+
 	// Start server
 	server := &http.Server{
 		Handler: mux,
