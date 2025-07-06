@@ -20,6 +20,7 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	jwtSecret      string
+	polkaAPIKey    string
 }
 
 func main() {
@@ -96,17 +97,17 @@ func initApiConfig() *apiConfig {
 	}
 	dbQueries := database.New(db)
 
-	// Determine execution platform (dev, qa, prod)
+	// Other variables
 	platform := os.Getenv("PLATFORM")
-
-	// Grab JWT info
 	jwtSecret := os.Getenv("JWT_SECRET")
+	polkaAPIKey := os.Getenv("POLKA_API_KEY")
 
 	// Set values into config
 	cfg := &apiConfig{
-		db:        dbQueries,
-		platform:  platform,
-		jwtSecret: jwtSecret,
+		db:          dbQueries,
+		platform:    platform,
+		jwtSecret:   jwtSecret,
+		polkaAPIKey: polkaAPIKey,
 	}
 
 	cfg.fileServerHits.Store(0)

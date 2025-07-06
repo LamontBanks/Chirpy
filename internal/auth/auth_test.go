@@ -177,6 +177,41 @@ func TestGetBearerTokenErrorIfNotSet(t *testing.T) {
 	assertNotEqual(err, nil, header, t)
 }
 
+func TestGetAPIKey(t *testing.T) {
+	// Extract correctly set bearer token
+	expectedAPIKey := "abc123"
+
+	header := httptest.NewRecorder().Header()
+	header.Add("Authorization", "ApiKey "+expectedAPIKey)
+
+	actualAPIKey, err := GetAPIKey(header)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	assertEqual(actualAPIKey, expectedAPIKey, header, t)
+}
+
+func TestGetAPIKeyErrorIfNotSet(t *testing.T) {
+	expectedAPIKey := ""
+	header := httptest.NewRecorder().Header()
+
+	// 1. Missing "ApiKey " prefix, return an error
+	header.Add("Authorization", expectedAPIKey)
+	_, err := GetAPIKey(header)
+	assertNotEqual(err, nil, header, t)
+
+	// 2. Misformatted ApiKey prefix (no space)
+	header.Set("Authorization", "ApiKey"+expectedAPIKey)
+	_, err = GetAPIKey(header)
+	assertNotEqual(err, nil, header, t)
+
+	// 3. Missing token
+	header.Set("Authorization", "ApiKey")
+	_, err = GetAPIKey(header)
+	assertNotEqual(err, nil, header, t)
+}
+
 func assertEqual(first, second, input any, t *testing.T) {
 	if first != second {
 		t.Errorf("\nInput:\n\t%v\nActual:\n\t%v\nExpected:\n\t%v", input, first, second)

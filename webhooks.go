@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/LamontBanks/Chirpy/internal/auth"
 	"github.com/google/uuid"
 )
 
@@ -17,11 +18,21 @@ type PolkaWebhookRequest struct {
 
 func (cfg *apiConfig) handlerUserUpgraded() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Check API Key
+		polkaAPIKey, err := auth.GetAPIKey(r.Header)
+		if err != nil {
+			sendResponse(w, http.StatusUnauthorized, err.Error())
+			return
+		}
+		if polkaAPIKey != cfg.polkaAPIKey {
+			sendResponse(w, http.StatusUnauthorized, "Invalid Polda API Key")
+			return
+		}
+
 		// Decode request to validate body parameters
 		req := PolkaWebhookRequest{}
-
 		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&req)
+		err = decoder.Decode(&req)
 		if err != nil {
 			sendResponse(w, http.StatusBadRequest, err.Error())
 			return

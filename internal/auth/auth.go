@@ -112,6 +112,26 @@ func GetBearerToken(header http.Header) (string, error) {
 	return bearerToken, nil
 }
 
+// Return the key from the `Authorization: ApiKey <key>` header
+func GetAPIKey(header http.Header) (string, error) {
+	apiKey := header.Get("Authorization")
+
+	if apiKey == "" {
+		return "", fmt.Errorf("authorization header value not found")
+	}
+
+	// Included whitespace in split is intentional
+	splitAPIKey := strings.Split(apiKey, "ApiKey ")
+
+	if len(splitAPIKey) < 2 {
+		return "", fmt.Errorf("invalid authorization header value")
+	}
+
+	apiKey = strings.TrimSpace(splitAPIKey[1])
+
+	return apiKey, nil
+}
+
 // Returns a 256-bit, hex-encoded string
 func MakeRefreshToken() (string, error) {
 	randBits := make([]byte, 256)
