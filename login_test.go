@@ -14,16 +14,18 @@ func TestLogin(t *testing.T) {
 	cfg := initApiConfig()
 
 	// Clear users, create new user
-	deleteAllUsersAndPosts(cfg, t)
+	err := deleteAllUsersAndPosts(cfg)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
 	email := "fakeuser@email.com"
 	password := "abc123password!"
-	createUserBody := fmt.Sprintf(`{"email": "%v", "password": "%v"}`, email, password)
 
-	user, _, err := createTestUser(cfg, createUserBody)
+	user, _, err := createTestUser(cfg, email, password)
 	if err != nil {
-		t.Errorf("failed to create user %v: %v", createUserBody, err)
-		t.FailNow()
+		t.Error(err)
 	}
 
 	// Login
@@ -65,17 +67,19 @@ func TestLoginDefaultTokenExpiration(t *testing.T) {
 	cfg := initApiConfig()
 
 	// Clear users, create new user
-	deleteAllUsersAndPosts(cfg, t)
+	err := deleteAllUsersAndPosts(cfg)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
 	// Create new user
 	email := "fakeuser@email.com"
 	password := "abc123password!"
-	createUserBody := fmt.Sprintf(`{"email": "%v", "password": "%v"}`, email, password)
 
-	user, _, err := createTestUser(cfg, createUserBody)
+	user, _, err := createTestUser(cfg, email, password)
 	if err != nil {
-		t.Errorf("failed to create user %v: %v", createUserBody, err)
-		t.FailNow()
+		t.Error(err)
 	}
 
 	// Login
