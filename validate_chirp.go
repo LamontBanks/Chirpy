@@ -8,28 +8,25 @@ import (
 
 func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 	// Request, response
-	type requestBody struct {
+	req := struct {
 		Body string `json:"body"`
-	}
-	req := requestBody{}
+	}{}
 
-	type responseBody struct {
+	resp := struct {
 		Body string `json:"body"`
-	}
-	resp := responseBody{}
+	}{}
 
 	// Decode request
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&req)
 
-	// Validate chirp
 	if err != nil {
-		sendErrorJSONResponse(w, "Something went wrong", 500, err)
+		sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 		return
 	}
 
 	if len(req.Body) == 0 {
-		sendErrorJSONResponse(w, "Something went wrong", 400, nil)
+		sendErrorJSONResponse(w, "Something went wrong", http.StatusBadRequest, nil)
 		return
 	}
 
@@ -39,7 +36,7 @@ func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 		SendJSONResponse(w, http.StatusOK, resp)
 		return
 	} else {
-		sendErrorJSONResponse(w, "Chirp is too long", 400, nil)
+		sendErrorJSONResponse(w, "Chirp is too long", http.StatusBadRequest, nil)
 		return
 	}
 }
@@ -54,11 +51,9 @@ func censoredBannedWords(originalText string) string {
 	censorMasking := "****"
 
 	for _, bannedWord := range bannedWords {
-		// Split text by spaces to isolate words
 		splitText := strings.Split(censoredText, " ")
 
 		for i := range splitText {
-			// Convert to lowercase for case-insensitve comparison
 			if strings.ToLower(splitText[i]) == bannedWord {
 				splitText[i] = censorMasking
 			}

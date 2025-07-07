@@ -13,10 +13,6 @@ import (
 // Returns a new JWT token, if the given refresh token is still valid
 func (cfg *apiConfig) handlerRefresh() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		type response struct {
-			Token string `json:"token"`
-		}
-
 		// Get token from header
 		refreshToken, err := auth.GetBearerToken(r.Header)
 		if err != nil {
@@ -61,9 +57,13 @@ func (cfg *apiConfig) handlerRefresh() http.HandlerFunc {
 		}
 
 		// Response
-		SendJSONResponse(w, 200, response{
+		resp := struct {
+			Token string `json:"token"`
+		}{
 			Token: newJWTToken,
-		})
+		}
+
+		SendJSONResponse(w, 200, resp)
 	}
 }
 

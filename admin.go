@@ -7,10 +7,6 @@ import (
 
 func (cfg *apiConfig) deleteUsersHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		type response struct {
-			Result string `json:"result"`
-		}
-
 		// CRITICAL: Delete All Users only allowed in dev environment
 		if cfg.platform != "dev" {
 			sendErrorJSONResponse(w, "cannot DELETE in non-dev environment", http.StatusForbidden, fmt.Errorf("attempted to DELETE in non-dev region"))
@@ -32,8 +28,12 @@ func (cfg *apiConfig) deleteUsersHandler() http.HandlerFunc {
 		}
 
 		// Response
-		SendJSONResponse(w, http.StatusOK, response{
+		resp := struct {
+			Result string `json:"result"`
+		}{
 			Result: fmt.Sprintf("All %v users deleted", numUsers),
-		})
+		}
+
+		SendJSONResponse(w, http.StatusOK, resp)
 	}
 }

@@ -22,33 +22,32 @@ type User struct {
 // Wrap functions in a closure to get access to the database
 func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		type requestBody struct {
+		req := struct {
 			Password string `json:"password"`
 			Email    string `json:"email"`
-		}
+		}{}
 
 		// Decode request
-		reqBody := requestBody{}
 		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&reqBody)
+		err := decoder.Decode(&req)
 		if err != nil {
 			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		// Check for required elements
-		if reqBody.Email == "" {
+		if req.Email == "" {
 			sendErrorJSONResponse(w, "Email required", http.StatusBadRequest, nil)
 			return
 		}
 
-		if reqBody.Password == "" {
+		if req.Password == "" {
 			sendErrorJSONResponse(w, "Password required", http.StatusBadRequest, nil)
 			return
 		}
 
 		// Save password
-		hashedPassword, err := auth.HashPassword(reqBody.Password)
+		hashedPassword, err := auth.HashPassword(req.Password)
 		if err != nil {
 			sendErrorJSONResponse(w, "Invalid Password", http.StatusBadRequest, err)
 			return
@@ -57,14 +56,14 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 		// Create user
 		dbUser, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
 			ID:             uuid.New(),
-			Email:          reqBody.Email,
+			Email:          req.Email,
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 			HashedPassword: hashedPassword,
 		})
 
 		if err != nil {
-			msg := fmt.Sprintf("Unable to create user with email %v", reqBody.Email)
+			msg := fmt.Sprintf("Unable to create user with email %v", req.Email)
 			sendErrorJSONResponse(w, msg, 500, err)
 			return
 		}
@@ -86,10 +85,10 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 // Updates the user's email and password, based on the provided authentication token
 func (cfg *apiConfig) updateUserHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		type request struct {
+		req := struct {
 			Email    string `json:"email"`
 			Password string `json:"password"`
-		}
+		}{}
 
 		// Read userID from the auth token
 		token, err := auth.GetBearerToken(r.Header)
@@ -105,7 +104,6 @@ func (cfg *apiConfig) updateUserHandler() http.HandlerFunc {
 		}
 
 		// Decode request, check new email and password values
-		req := request{}
 		decoder := json.NewDecoder(r.Body)
 		err = decoder.Decode(&req)
 		if err != nil {

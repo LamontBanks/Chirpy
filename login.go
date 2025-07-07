@@ -22,45 +22,44 @@ type LoginResponse struct {
 
 func (cfg *apiConfig) handlerLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		type requestBody struct {
+		req := struct {
 			Password string `json:"password"`
 			Email    string `json:"email"`
-		}
+		}{}
 
 		// Decode request
-		reqBody := requestBody{}
 		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&reqBody)
+		err := decoder.Decode(&req)
 		if err != nil {
 			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		// Validate required fields
-		if reqBody.Email == "" {
+		if req.Email == "" {
 			sendErrorJSONResponse(w, "Email must not be blank", http.StatusBadRequest, nil)
 			return
 		}
 
-		if reqBody.Password == "" {
+		if req.Password == "" {
 			sendErrorJSONResponse(w, "Password required", http.StatusBadRequest, nil)
 			return
 		}
 
 		// Check user password
-		user, err := cfg.db.GetUserByEmail(r.Context(), reqBody.Email)
+		user, err := cfg.db.GetUserByEmail(r.Context(), req.Email)
 		if err != nil {
 			sendErrorJSONResponse(w, "incorrect email or password", http.StatusUnauthorized, err)
 			return
 		}
 
-		err = auth.CheckPasswordHash(reqBody.Password, user.HashedPassword)
+		err = auth.CheckPasswordHash(req.Password, user.HashedPassword)
 		if err != nil {
 			sendErrorJSONResponse(w, "incorrect email or password", http.StatusUnauthorized, err)
 			return
 		}
 
-		// 1 hour token JWT token
+		// Check JWT hasn't expired
 		tokenDuration, err := time.ParseDuration(auth.JWT_TOKEN_DURATION)
 		if err != nil {
 			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)

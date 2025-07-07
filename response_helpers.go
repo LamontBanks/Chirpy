@@ -11,10 +11,9 @@ func sendErrorJSONResponse(w http.ResponseWriter, msg string, statusCode int, er
 		log.Printf("%v", errorToLog)
 	}
 
-	type errorResponseJSON struct {
+	errorResp := struct {
 		Error string `json:"error"`
-	}
-	errorResp := errorResponseJSON{
+	}{
 		Error: msg,
 	}
 

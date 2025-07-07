@@ -23,9 +23,9 @@ type Chirp struct {
 // Receives text from the users, saves it, and returns the a chirp
 func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		type request struct {
+		req := struct {
 			Body string `json:"body"`
-		}
+		}{}
 
 		// Validate Authorization Token
 		// 1. Token exists
@@ -53,17 +53,16 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 			return
 		}
 
-		// Decode request to validate body parameters
-		reqBody := request{}
+		// Decode request, validate body
 		decoder := json.NewDecoder(r.Body)
-		err = decoder.Decode(&reqBody)
+		err = decoder.Decode(&req)
 		if err != nil {
 			sendErrorJSONResponse(w, "Something went wrong", http.StatusInternalServerError, err)
 			return
 		}
 
 		// Validate submitted text
-		chirpText := reqBody.Body
+		chirpText := req.Body
 		if len(chirpText) == 0 {
 			sendErrorJSONResponse(w, "Chirp cannot be empty", http.StatusBadRequest, nil)
 			return
