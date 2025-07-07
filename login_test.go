@@ -112,3 +112,21 @@ func TestLoginDefaultTokenExpiration(t *testing.T) {
 		t.Errorf("missing jwt token:\n\t%v", loggedInUser)
 	}
 }
+
+func loginUser(cfg *apiConfig, email, password string) (LoginResponse, error) {
+	// Log in the user
+	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v"}`, email, password)
+	request := httptest.NewRequest("POST", "/api/login", strings.NewReader(loginUserBody))
+	w := httptest.NewRecorder()
+
+	cfg.handlerLogin()(w, request)
+
+	loggedInUser := &LoginResponse{}
+	decoder := json.NewDecoder(w.Result().Body)
+	err := decoder.Decode(&loggedInUser)
+	if err != nil {
+		return *loggedInUser, err
+	}
+
+	return *loggedInUser, nil
+}
