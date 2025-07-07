@@ -15,14 +15,18 @@ import (
 func TestUserCreation(t *testing.T) {
 	cfg := initApiConfig()
 
-	deleteAllUsersAndPosts(cfg, t)
+	err := deleteAllUsersAndPosts(cfg)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
 	// Create new user
 	email := "fakeuser@email.com"
 	password := "abc!password123"
 	input := fmt.Sprintf(`{"email": "%v", "password": "%v"}`, email, password)
 
-	newUser, responseCode, err := createTestUser(cfg, input)
+	newUser, responseCode, err := createTestUser(cfg, email, password)
 	if err != nil {
 		t.Errorf("failed to create user %v: %v", input, err)
 	}
@@ -36,23 +40,26 @@ func TestUserCreation(t *testing.T) {
 	assertEquals(uuid.Validate(newUser.ID.String()), nil, newUser, t)
 }
 
-func deleteAllUsersAndPosts(cfg *apiConfig, t *testing.T) {
+func deleteAllUsersAndPosts(cfg *apiConfig) error {
 	if cfg.platform != "dev" {
-		t.Errorf("cannot call /api/reset in non-dev environment")
-		t.FailNow()
+		return fmt.Errorf("cannot call /api/reset in non-dev environment")
 	}
 
 	resetRequest := httptest.NewRequest("POST", "/api/reset", nil)
 	w := httptest.NewRecorder()
 	cfg.deleteUsersHandler()(w, resetRequest)
 
-	assertEquals(w.Result().StatusCode, http.StatusOK, resetRequest, nil)
+	if w.Result().StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to delete all users, posts")
+	}
+
+	return nil
 }
 
 // Attempts to create a new user using the JSON string
 // Returns the status code and any error
-func createTestUser(cfg *apiConfig, inputBody string) (*User, int, error) {
-	request := httptest.NewRequest("POST", "/api/users", strings.NewReader(inputBody))
+func createTestUser(cfg *apiConfig, email, password string) (*User, int, error) {
+	request := httptest.NewRequest("POST", "/api/users", strings.NewReader(fmt.Sprintf(`{"email": "%v", "password": "%v"}`, email, password)))
 	w := httptest.NewRecorder()
 
 	// Make request
