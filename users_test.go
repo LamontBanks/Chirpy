@@ -15,27 +15,25 @@ import (
 func TestUserCreation(t *testing.T) {
 	cfg := initApiConfig()
 
-	// Delete users from database
 	deleteAllUsersAndPosts(cfg, t)
 
 	// Create new user
-	input := `{"email": "fakeuser@email.com", "password": "abc123password!"}`
+	email := "fakeuser@email.com"
+	password := "abc!password123"
+	input := fmt.Sprintf(`{"email": "%v", "password": "%v"}`, email, password)
+
 	newUser, responseCode, err := createTestUser(cfg, input)
 	if err != nil {
 		t.Errorf("failed to create user %v: %v", input, err)
-		t.FailNow()
 	}
 
 	// Validate user fields
-	assertEqual(responseCode, http.StatusCreated, input, t)
-	assertEqual(newUser.Email, "fakeuser@email.com", input, t)
-
-	if err := uuid.Validate(newUser.ID.String()); err != nil {
-		t.Errorf("id is not a valid UUID: %v", newUser)
-		t.FailNow()
-	}
-
-	// TODO: Verify timestamps
+	assertEquals(responseCode, http.StatusCreated, newUser, t)
+	assertEquals(newUser.Email, email, newUser, t)
+	assertEquals(newUser.IsChirpyRed, false, newUser, t)
+	assertEquals(newUser.CreatedAt.IsZero(), false, newUser, t)
+	assertEquals(newUser.UpdatedAt.IsZero(), false, newUser, t)
+	assertEquals(uuid.Validate(newUser.ID.String()), nil, newUser, t)
 }
 
 func deleteAllUsersAndPosts(cfg *apiConfig, t *testing.T) {
@@ -48,16 +46,12 @@ func deleteAllUsersAndPosts(cfg *apiConfig, t *testing.T) {
 	w := httptest.NewRecorder()
 	cfg.deleteUsersHandler()(w, resetRequest)
 
-	if w.Result().StatusCode != http.StatusOK {
-		t.Errorf("failed to delete all users: %v", w.Result())
-		t.FailNow()
-	}
+	assertEquals(w.Result().StatusCode, http.StatusOK, resetRequest, nil)
 }
 
 // Attempts to create a new user using the JSON string
 // Returns the status code and any error
 func createTestUser(cfg *apiConfig, inputBody string) (*User, int, error) {
-	// New user request
 	request := httptest.NewRequest("POST", "/api/users", strings.NewReader(inputBody))
 	w := httptest.NewRecorder()
 

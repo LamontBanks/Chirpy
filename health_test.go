@@ -12,5 +12,5 @@ func TestHealthHandler(t *testing.T) {
 
 	healthHandler(recorder, request)
 
-	assertEqual(recorder.Result().StatusCode, http.StatusOK, request, t)
+	assertEquals(recorder.Result().StatusCode, http.StatusOK, request, t)
 }

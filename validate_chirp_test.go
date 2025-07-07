@@ -14,7 +14,7 @@ func TestCensoredBannedWords(t *testing.T) {
 
 	actual := censoredBannedWords(input)
 
-	assertEqual(actual, expected, input, t)
+	assertEquals(actual, expected, input, t)
 }
 
 func TestAllBannedWords(t *testing.T) {
@@ -22,11 +22,14 @@ func TestAllBannedWords(t *testing.T) {
 	expected := "****"
 
 	for _, word := range bannedWords {
-		assertEqual(censoredBannedWords(word), expected, word, t)
+		censoredWord := censoredBannedWords(word)
+
+		assertEquals(censoredWord, expected, word, t)
 	}
 }
 
 func TestValidateChirpHandler(t *testing.T) {
+	// Chirp posts normally
 	inputBody := `{"body":"I had something interesting for breakfast"}`
 	expectedBody := `{"body":"I had something interesting for breakfast"}`
 	expectedStatusCode := http.StatusOK
@@ -34,21 +37,20 @@ func TestValidateChirpHandler(t *testing.T) {
 	// Request
 	request := httptest.NewRequest("POST", "/api/validate_chirp", strings.NewReader(inputBody))
 	request.Header.Set("Content-Type", "application/json")
-
-	// Call handler
 	httpRecorder := httptest.NewRecorder()
+
 	validateChirpHandler(httpRecorder, request)
 
-	// Read response
+	// Response
 	response := httpRecorder.Result()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
-	// Assert status code, response body, etc.
-	assertEqual(response.StatusCode, expectedStatusCode, nil, t)
-	assertEqual(string(body), expectedBody, inputBody, t)
+	// Assertions
+	assertEquals(response.StatusCode, expectedStatusCode, nil, t)
+	assertEquals(string(body), expectedBody, nil, t)
 }
 
 func TestTooLongChirp(t *testing.T) {
@@ -68,12 +70,14 @@ func TestTooLongChirp(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	assertEqual(response.StatusCode, expectedStatusCode, nil, t)
-	assertEqual(string(body), expectedBody, inputBody, t)
+	assertEquals(response.StatusCode, expectedStatusCode, nil, t)
+	assertEquals(string(body), expectedBody, inputBody, t)
 }
 
-func assertEqual(actual, expected, input any, t *testing.T) {
+// Check if actual == expected
+// `input` is an optional includsion of the original input
+func assertEquals(actual, expected, input any, t *testing.T) {
 	if actual != expected {
-		t.Errorf("\nActual:\n\t%v\nExpected:\n\t%v\nInput:\n\t%v", actual, expected, input)
+		t.Errorf("\nInput:\n\t%v\nActual:\n\t%v\nExpected:\n\t%v", input, actual, expected)
 	}
 }
