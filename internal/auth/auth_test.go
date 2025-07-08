@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -11,40 +12,84 @@ import (
 )
 
 func TestHashPassword(t *testing.T) {
-	// 1. Hash not the same as original password
-	input := "abc123password"
-	actual, err := HashPassword(input)
-	if err != nil {
-		t.Errorf("%v", err)
+	cases := []struct {
+		name        string
+		input       string
+		notExpected string
+	}{
+		{
+			name:        "Hash different from original password",
+			input:       "abc123password",
+			notExpected: "abc123password",
+		},
+		{
+			name:        "Hash is not empty",
+			input:       "abc123password",
+			notExpected: "",
+		},
 	}
-	assertNotEqual(actual, input, input, t)
 
-	// 2. Hash is not empty
-	input = "abc123password"
-	assertNotEqual(actual, "", input, t)
+	for _, c := range cases {
+		actual, err := HashPassword(c.input)
+		if err != nil {
+			t.Errorf("%v", err)
+		}
 
-	// 3. Hash is salted (different hash for same passwords)
-	input = "abc123"
-	actual1, err := HashPassword(input)
-	if err != nil {
-		t.Errorf("%v", err)
+		if actual == c.notExpected {
+			t.Error(formatTestError(c.name, actual, "not: "+c.notExpected))
+		}
 	}
-	actual2, err := HashPassword(input)
-	if err != nil {
-		t.Errorf("%v", err)
-	}
-	assertNotEqual(actual1, actual2, input, t)
 }
 
-func TestCheckPassword(t *testing.T) {
-	// Verify plaintext password matches hashed password
-	plaintextPassword := "abc123password"
-	hashedPassword, err := HashPassword(plaintextPassword)
-	if err != nil {
-		t.Errorf("%v", err)
+func TestHashPasswordIsSalted(t *testing.T) {
+	cases := []struct {
+		input string
+	}{
+		{
+			input: "abc123",
+		},
 	}
 
-	assertEqual(CheckPasswordHash(plaintextPassword, hashedPassword), nil, nil, t)
+	for _, c := range cases {
+		hash1, err := HashPassword(c.input)
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+
+		hash2, err := HashPassword(c.input)
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+
+		if hash1 != hash2 {
+			t.Error(formatTestError("Hashed password different for same input",
+				fmt.Errorf("%v -> %v != %v -> %v", c.input, hash1, c.input, hash2),
+				fmt.Errorf("%v -> %v == %v -> %v", c.input, hash1, c.input, hash2)))
+		}
+	}
+}
+
+func TestCheckPasswordHash(t *testing.T) {
+	cases := []struct {
+		input string
+	}{
+		{
+			input: "abc123password",
+		},
+	}
+
+	for _, c := range cases {
+		hash, err := HashPassword(c.input)
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+
+		actual := CheckPasswordHash(c.input, hash)
+
+		if actual != nil {
+			t.Error(formatTestError("No error returned", actual, nil))
+		}
+	}
 }
 
 func TestJWTGeneratesAToken(t *testing.T) {
@@ -58,7 +103,9 @@ func TestJWTGeneratesAToken(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	assertNotEqual(token, "", nil, t)
+	if token == "" {
+		t.Error(formatTestError(userID, token, `not ""`))
+	}
 }
 
 func TestValidateTokenExtractsUserID(t *testing.T) {
@@ -86,7 +133,10 @@ func TestValidateTokenRejectExpiredToken(t *testing.T) {
 	// Create new token with extremly short duration
 	userID := uuid.New()
 	tokenSecret := "acb123xyz!@#"
-	expiresIn, _ := time.ParseDuration("1ns")
+	expiresIn, err := time.ParseDuration("1ns")
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 	if err != nil {
@@ -98,13 +148,17 @@ func TestValidateTokenRejectExpiredToken(t *testing.T) {
 	expirationDuration, _ := time.ParseDuration("5ns")
 	time.Sleep(expirationDuration)
 
-	_, err = ValidateToken(token, tokenSecret)
+	userID, err = ValidateToken(token, tokenSecret)
 
 	// Check err message for invalid token and invalid claims error messages
 	// https://github.com/golang-jwt/jwt/blob/v5.2.2/errors.go#L8
 	expectedErrors := []error{
 		jwt.ErrTokenExpired,
 		jwt.ErrTokenInvalidClaims,
+	}
+
+	if userID != uuid.Nil {
+		t.Errorf("expired token returned userId %v, expected %v", userID, uuid.Nil)
 	}
 
 	for i := range expectedErrors {
@@ -158,58 +212,95 @@ func TestGetBearerToken(t *testing.T) {
 }
 
 func TestGetBearerTokenErrorIfNotSet(t *testing.T) {
-	expectedBearerToken := ""
-	header := httptest.NewRecorder().Header()
+	cases := []struct {
+		name  string
+		input []string
+	}{
+		{
+			name:  "Missing 'Bearer ' prefix",
+			input: []string{"Authorization", "abc123"},
+		},
+		{
+			name:  "Misformatted Bearer prefix (no space)",
+			input: []string{"Authorization", "Bearerabc123"},
+		},
+		{
+			name:  "Missing token",
+			input: []string{"Authorization", "Bearer"},
+		},
+	}
 
-	// 1. Missing "Bearer " prefix, return an error
-	header.Add("Authorization", expectedBearerToken)
-	_, err := GetBearerToken(header)
-	assertNotEqual(err, nil, header, t)
+	for _, c := range cases {
+		header := httptest.NewRecorder().Header()
+		header.Add(c.input[0], c.input[1])
 
-	// 2. Misformatted Bearer prefix (no space)
-	header.Set("Authorization", "Bearer"+expectedBearerToken)
-	_, err = GetBearerToken(header)
-	assertNotEqual(err, nil, header, t)
+		_, actual := GetBearerToken(header)
 
-	// 3. Missing token
-	header.Set("Authorization", "Bearer")
-	_, err = GetBearerToken(header)
-	assertNotEqual(err, nil, header, t)
+		if actual == nil {
+			t.Error(formatTestError(c.name, actual, fmt.Sprintf("%v: %v -> error", c.input[0], c.input[1])))
+		}
+	}
 }
 
 func TestGetAPIKey(t *testing.T) {
-	// Extract correctly set bearer token
-	expectedAPIKey := "abc123"
-
-	header := httptest.NewRecorder().Header()
-	header.Add("Authorization", "ApiKey "+expectedAPIKey)
-
-	actualAPIKey, err := GetAPIKey(header)
-	if err != nil {
-		t.Errorf("%v", err)
+	cases := []struct {
+		input    []string
+		expected string
+	}{
+		{
+			input:    []string{"Authorization", "ApiKey abc123"},
+			expected: "abc123",
+		},
+		{
+			input:    []string{"Authorization", "ApiKey a-b-c-1-2-3"},
+			expected: "a-b-c-1-2-3",
+		},
 	}
 
-	assertEqual(actualAPIKey, expectedAPIKey, header, t)
+	for _, c := range cases {
+		header := httptest.NewRecorder().Header()
+		header.Add(c.input[0], c.input[1])
+
+		actualAPIKey, err := GetAPIKey(header)
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+
+		if actualAPIKey != c.expected {
+			t.Error(formatTestError(c.input, actualAPIKey, c.expected))
+		}
+	}
 }
 
 func TestGetAPIKeyErrorIfNotSet(t *testing.T) {
-	expectedAPIKey := ""
-	header := httptest.NewRecorder().Header()
+	cases := []struct {
+		name  string
+		input []string
+	}{
+		{
+			name:  "Missing 'ApiKey ' prefix",
+			input: []string{"Authorization", "abc123"},
+		},
+		{
+			name:  "Misformatted ApiKey prefix (no space)",
+			input: []string{"Authorization", "ApiKeyabc123"},
+		},
+		{
+			name:  "Missing token",
+			input: []string{"Authorization", "ApiKey"},
+		},
+	}
 
-	// 1. Missing "ApiKey " prefix, return an error
-	header.Add("Authorization", expectedAPIKey)
-	_, err := GetAPIKey(header)
-	assertNotEqual(err, nil, header, t)
+	for _, c := range cases {
+		header := httptest.NewRecorder().Header()
+		header.Add(c.input[0], c.input[1])
 
-	// 2. Misformatted ApiKey prefix (no space)
-	header.Set("Authorization", "ApiKey"+expectedAPIKey)
-	_, err = GetAPIKey(header)
-	assertNotEqual(err, nil, header, t)
+		_, actual := GetAPIKey(header)
 
-	// 3. Missing token
-	header.Set("Authorization", "ApiKey")
-	_, err = GetAPIKey(header)
-	assertNotEqual(err, nil, header, t)
+		if actual == nil {
+			t.Error(formatTestError(c.name, actual, fmt.Sprintf("%v: %v -> error", c.input[0], c.input[1])))
+		}
+	}
 }
 
 func assertEqual(first, second, input any, t *testing.T) {
@@ -218,8 +309,6 @@ func assertEqual(first, second, input any, t *testing.T) {
 	}
 }
 
-func assertNotEqual(first, second, input any, t *testing.T) {
-	if first == second {
-		t.Errorf("\nInput:\n\t%v\nActual:\n\t%v\nExpected:\n\t*not* %v", input, first, second)
-	}
+func formatTestError(testname, actual, expected any) string {
+	return fmt.Sprintf("\nInput:\n\t%v\nActual:\n\t%v\nExpected:\n\t%v", testname, actual, expected)
 }
