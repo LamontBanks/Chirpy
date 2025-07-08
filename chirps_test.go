@@ -180,6 +180,41 @@ func TestDeleteChirp(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "Delete multiple chirps",
+			messages: []string{"abc", "123", "xyz"},
+			chirpsToDelete: []Chirp{
+				{
+					Body: "abc",
+				},
+				{
+					Body: "xyz",
+				},
+			},
+			expectedRespCode: http.StatusNoContent,
+			expectedRemainingChirps: []Chirp{
+				{
+					Body: "123",
+				},
+			},
+		},
+		{
+			name:     "Delete all chirps",
+			messages: []string{"abc", "123", "xyz"},
+			chirpsToDelete: []Chirp{
+				{
+					Body: "abc",
+				},
+				{
+					Body: "123",
+				},
+				{
+					Body: "xyz",
+				},
+			},
+			expectedRespCode:        http.StatusNoContent,
+			expectedRemainingChirps: []Chirp{},
+		},
 	}
 
 	cfg := initApiConfig()
@@ -219,6 +254,9 @@ func TestDeleteChirp(t *testing.T) {
 			index := slices.IndexFunc(postedChirps, func(chirp Chirp) bool {
 				return chirp.Body == chirpToDelete.Body
 			})
+			if index == -1 {
+				t.Error(formatTestError(fmt.Sprintf("Chirp message '%v' to delete not found", chirpToDelete.Body), postedChirps, c.chirpsToDelete))
+			}
 
 			deleteChirpRequest := httptest.NewRequest("DELETE", "/api/chirps/", nil)
 			deleteChirpRequest.SetPathValue("chirpID", postedChirps[index].ID.String())
@@ -232,26 +270,26 @@ func TestDeleteChirp(t *testing.T) {
 			if w.Result().StatusCode != c.expectedRespCode {
 				t.Error(formatTestError(w, w.Result().StatusCode, c.expectedRespCode))
 			}
+		}
 
-			// Ensure chirp was removed
-			getChirpsReq := httptest.NewRequest("GET", "/api/chirps", nil)
-			w = httptest.NewRecorder()
-			cfg.getChirps()(w, getChirpsReq)
+		// Ensure chirps were removed
+		getChirpsReq := httptest.NewRequest("GET", "/api/chirps", nil)
+		w := httptest.NewRecorder()
+		cfg.getChirps()(w, getChirpsReq)
 
-			actualRemainingChirps := []Chirp{}
-			decoder := json.NewDecoder(w.Result().Body)
-			err = decoder.Decode(&actualRemainingChirps)
-			if err != nil {
-				t.Error(err)
-			}
+		actualRemainingChirps := []Chirp{}
+		decoder := json.NewDecoder(w.Result().Body)
+		err = decoder.Decode(&actualRemainingChirps)
+		if err != nil {
+			t.Error(err)
+		}
 
-			// Correct chirps (based on text) remain
-			correctChirpsRemain := slices.EqualFunc(actualRemainingChirps, c.expectedRemainingChirps, func(actual, expected Chirp) bool {
-				return actual.Body == expected.Body
-			})
-			if !correctChirpsRemain {
-				t.Error(formatTestError("incorrect chirps remaining after DELETE", actualRemainingChirps, c.expectedRemainingChirps))
-			}
+		// Correct chirps (based on text) remain
+		correctChirpsRemain := slices.EqualFunc(actualRemainingChirps, c.expectedRemainingChirps, func(actual, expected Chirp) bool {
+			return actual.Body == expected.Body
+		})
+		if !correctChirpsRemain {
+			t.Error(formatTestError("incorrect chirps remaining after DELETE", actualRemainingChirps, c.expectedRemainingChirps))
 		}
 	}
 }
