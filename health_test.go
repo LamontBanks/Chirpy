@@ -7,10 +7,27 @@ import (
 )
 
 func TestHealthHandler(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "/healthz", nil)
-	recorder := httptest.NewRecorder()
+	cases := []struct {
+		name                 string
+		method               string
+		expectedResponseCode int
+	}{
+		{
+			name:                 "GET",
+			method:               http.MethodGet,
+			expectedResponseCode: http.StatusOK,
+		},
+	}
 
-	healthHandler(recorder, request)
+	for _, c := range cases {
+		request := httptest.NewRequest(c.method, "/healthz", nil)
+		recorder := httptest.NewRecorder()
 
-	assertEquals(recorder.Result().StatusCode, http.StatusOK, request, t)
+		healthHandler(recorder, request)
+
+		if recorder.Result().StatusCode != c.expectedResponseCode {
+			t.Error(formatTestError(c.name, recorder.Result().StatusCode, c.expectedResponseCode))
+		}
+	}
+
 }
