@@ -99,16 +99,37 @@ func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
 
 func (cfg *apiConfig) getChirps() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		response := []Chirp{}
+		chirps := []database.Chirp{}
 
-		// Gets in ascendaing order by created_at
-		allChirps, err := cfg.db.GetChirps(r.Context())
-		if err != nil {
-			sendErrorJSONResponse(w, "Failed to gets all chirps", http.StatusInternalServerError, err)
-			return
+		// Optional Query Parameter - get chirps from given author_id
+		author_id := r.URL.Query().Get("author_id")
+
+		if author_id != "" { // By author_id
+			author_uuid, err := uuid.Parse(author_id)
+			if err != nil {
+				sendErrorJSONResponse(w, "author not found", http.StatusNotFound, err)
+				return
+			}
+
+			c, err := cfg.db.GetChirpsByUserID(r.Context(), author_uuid)
+			if err != nil {
+				sendErrorJSONResponse(w, fmt.Sprintf("Failed to get chirps for author %v", author_uuid), http.StatusInternalServerError, err)
+				return
+			}
+
+			chirps = c
+		} else { // All chirps
+			c, err := cfg.db.GetChirps(r.Context())
+			if err != nil {
+				sendErrorJSONResponse(w, "Failed to get all chirps", http.StatusInternalServerError, err)
+				return
+			}
+
+			chirps = c
 		}
 
-		for _, c := range allChirps {
+		response := []Chirp{}
+		for _, c := range chirps {
 			response = append(response, Chirp{
 				ID:        c.ID,
 				CreatedAt: c.CreatedAt,
