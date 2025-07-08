@@ -122,20 +122,23 @@ func createTestUser(cfg *apiConfig, email, password string) (*User, int, error) 
 }
 
 // Create multiple users, unit test helper function
-func createMultipleUsers(cfg *apiConfig, numUsers int) ([]User, error) {
+// Also returns passwords - indices correspond to each user
+func createMultipleUsers(cfg *apiConfig, numUsers int) ([]User, []string, error) {
 	newUsers := []User{}
+	passwords := []string{}
 
 	for i := range numUsers {
 		email := fmt.Sprintf("testuser_%v", i)
-		password := fmt.Sprintf("abc00%v", i)
+		pw := fmt.Sprintf("abc00%v", i)
 
-		user, _, err := createTestUser(cfg, email, password)
+		user, _, err := createTestUser(cfg, email, pw)
 		if err != nil {
-			return []User{}, err
+			return []User{}, []string{}, err
 		}
+		passwords = append(passwords, pw)
 
 		newUsers = append(newUsers, *user)
 	}
 
-	return newUsers, nil
+	return newUsers, passwords, nil
 }

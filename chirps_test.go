@@ -101,54 +101,26 @@ func TestPostChirp(t *testing.T) {
 func TestGetChirps(t *testing.T) {
 	cfg := initApiConfig()
 
-	// Create 2 users
-	email1 := "testuser@gmail.com"
-	password1 := "abc123"
-
-	email2 := "testuser2@gmail.com"
-	password2 := "xyz890"
-
-	user1, _, err := createTestUser(cfg, email1, password1)
+	// Create users
+	users, passwords, err := createMultipleUsers(cfg, 3)
 	if err != nil {
 		t.Error(err)
-		t.FailNow()
-	}
-	user2, _, err := createTestUser(cfg, email2, password2)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
 	}
 
-	// Post chirps for both users
-	messages := []string{"hello, world", "I like turtles", "going on vacation"}
-
-	// User 1
-	loggedInUser1, err := loginUser(cfg, user1.Email, password1)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	_, err = postChirp(cfg, loggedInUser1.Token, messages[0])
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
+	// Create message corresponding to each user
+	messages := []string{}
+	for i := range len(users) {
+		messages = append(messages, fmt.Sprintf("Hello from user %v", i))
 	}
 
-	// User 2
-	loggedInUser2, err := loginUser(cfg, user2.Email, password2)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	_, err = postChirp(cfg, loggedInUser2.Token, messages[1])
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	_, err = postChirp(cfg, loggedInUser2.Token, messages[2])
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
+	// Login with each user, post a chirp
+	for i, u := range users {
+		loginResp, err := loginUser(cfg, u.Email, passwords[i])
+		if err != nil {
+			t.Error(err)
+		}
+
+		postChirp(cfg, loginResp.Token, messages[i])
 	}
 
 	// Get all chirps
@@ -165,9 +137,8 @@ func TestGetChirps(t *testing.T) {
 	}
 
 	// Assertions
-	// All chirps pulled
-	if len(chirps) != 3 {
-		t.Errorf("failed to GET all chirps: %v", chirps)
+	if len(chirps) != len(messages) {
+		t.Errorf("failed to get all chirps: %v", chirps)
 	}
 
 	// All messages listed
@@ -175,7 +146,7 @@ func TestGetChirps(t *testing.T) {
 		if !slices.ContainsFunc(chirps, func(c Chirp) bool {
 			return c.Body == message
 		}) {
-			t.Errorf("missing some messages %v, Chirps: %v", messages, chirps)
+			t.Errorf("missing messages %v, Chirps: %v", messages, chirps)
 		}
 	}
 }
