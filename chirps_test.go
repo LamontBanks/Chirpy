@@ -101,8 +101,8 @@ func TestPostChirp(t *testing.T) {
 func TestGetChirps(t *testing.T) {
 	cfg := initApiConfig()
 
-	// Create users
-	users, passwords, err := createMultipleUsers(cfg, 3)
+	// Create multiple users
+	users, passwords, err := createTestUsers(cfg, 3)
 	if err != nil {
 		t.Error(err)
 	}
@@ -120,7 +120,10 @@ func TestGetChirps(t *testing.T) {
 			t.Error(err)
 		}
 
-		postChirp(cfg, loginResp.Token, messages[i])
+		_, err = postChirp(cfg, loginResp.Token, messages[i])
+		if err != nil {
+			t.Error(err)
+		}
 	}
 
 	// Get all chirps
@@ -138,96 +141,119 @@ func TestGetChirps(t *testing.T) {
 
 	// Assertions
 	if len(chirps) != len(messages) {
-		t.Errorf("failed to get all chirps: %v", chirps)
+		t.Errorf("failed to get all chirps: %+v", chirps)
 	}
 
 	// All messages listed
-	for _, message := range messages {
+	for _, msg := range messages {
 		if !slices.ContainsFunc(chirps, func(c Chirp) bool {
-			return c.Body == message
+			return c.Body == msg
 		}) {
-			t.Errorf("missing messages %v, Chirps: %v", messages, chirps)
+			t.Errorf("missing message '%v': %+v", msg, chirps)
 		}
 	}
 }
 
 func TestDeleteChirp(t *testing.T) {
+	cases := []struct {
+		name                    string
+		messages                []string
+		chirpsToDelete          []Chirp
+		expectedRemainingChirps []Chirp
+		expectedRespCode        int
+	}{
+		{
+			name:     "Delete single chirp",
+			messages: []string{"abc", "123", "xyz"},
+			chirpsToDelete: []Chirp{
+				{
+					Body: "abc",
+				},
+			},
+			expectedRespCode: http.StatusNoContent,
+			expectedRemainingChirps: []Chirp{
+				{
+					Body: "123",
+				},
+				{
+					Body: "xyz",
+				},
+			},
+		},
+	}
+
 	cfg := initApiConfig()
 
-	// Create user, login
-	email := "testuser@gmail.com"
-	password := "abc123"
+	for _, c := range cases {
+		err := deleteAllUsersAndPosts(cfg)
+		if err != nil {
+			t.Error(err)
+		}
 
-	user, _, err := createTestUser(cfg, email, password)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		// Create single user
+		users, passwords, err := createTestUsers(cfg, 1)
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Login, post chirps
+		loggedInUser, err := loginUser(cfg, users[0].Email, passwords[0])
+		postedChirps := []Chirp{}
+
+		for _, msg := range c.messages {
+			if err != nil {
+				t.Error(err)
+			}
+
+			chirp, err := postChirp(cfg, loggedInUser.Token, msg)
+			if err != nil {
+				t.Error(err)
+			}
+
+			postedChirps = append(postedChirps, chirp)
+		}
+
+		// Delete specified chirps
+		for _, chirpToDelete := range c.chirpsToDelete {
+			// Find the chirp based on the message text
+			index := slices.IndexFunc(postedChirps, func(chirp Chirp) bool {
+				return chirp.Body == chirpToDelete.Body
+			})
+
+			deleteChirpRequest := httptest.NewRequest("DELETE", "/api/chirps/", nil)
+			deleteChirpRequest.SetPathValue("chirpID", postedChirps[index].ID.String())
+			deleteChirpRequest.Header.Add("Authorization", "Bearer "+loggedInUser.Token)
+
+			w := httptest.NewRecorder()
+
+			cfg.deleteChirpHandler()(w, deleteChirpRequest)
+
+			// DELETE Success response
+			if w.Result().StatusCode != c.expectedRespCode {
+				t.Error(formatTestError(w, w.Result().StatusCode, c.expectedRespCode))
+			}
+
+			// Ensure chirp was removed
+			getChirpsReq := httptest.NewRequest("GET", "/api/chirps", nil)
+			w = httptest.NewRecorder()
+			cfg.getChirps()(w, getChirpsReq)
+
+			actualRemainingChirps := []Chirp{}
+			decoder := json.NewDecoder(w.Result().Body)
+			err = decoder.Decode(&actualRemainingChirps)
+			if err != nil {
+				t.Error(err)
+			}
+
+			// Correct chirps (based on text) remain
+			correctChirpsRemain := slices.EqualFunc(actualRemainingChirps, c.expectedRemainingChirps, func(actual, expected Chirp) bool {
+				return actual.Body == expected.Body
+			})
+			if !correctChirpsRemain {
+				t.Error(formatTestError("incorrect chirps remaining after DELETE", actualRemainingChirps, c.expectedRemainingChirps))
+			}
+		}
 	}
-
-	loggedInUser, err := loginUser(cfg, user.Email, password)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	// Post multiple chirps
-	chirp1, err := postChirp(cfg, loggedInUser.Token, "hello, world")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	_, err = postChirp(cfg, loggedInUser.Token, "I like turtles")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	_, err = postChirp(cfg, loggedInUser.Token, "going on vacation")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	// Get all chirps
-	getChirpsReq := httptest.NewRequest("GET", "/api/chirps", nil)
-	w := httptest.NewRecorder()
-	cfg.getChirps()(w, getChirpsReq)
-
-	chirps := []Chirp{}
-
-	decoder := json.NewDecoder(w.Result().Body)
-	err = decoder.Decode(&chirps)
-	if err != nil {
-		t.Error(err)
-	}
-
-	// Quick check to ensure all the chirps posted
-	assertEquals(len(chirps), 3, chirps, t)
-
-	// Delete specific chirps
-	deleteChirpRequest := httptest.NewRequest("DELETE", "/api/chirps/", nil)
-	deleteChirpRequest.SetPathValue("chirpID", chirp1.ID.String())
-	deleteChirpRequest.Header.Add("Authorization", "Bearer "+loggedInUser.Token)
-	w = httptest.NewRecorder()
-
-	cfg.deleteChirpHandler()(w, deleteChirpRequest)
-
-	// Success response
-	assertEquals(w.Result().StatusCode, http.StatusNoContent, deleteChirpRequest, t)
-
-	// Ensure chirp was removed
-	getChirpsReq = httptest.NewRequest("GET", "/api/chirps", nil)
-	w = httptest.NewRecorder()
-	cfg.getChirps()(w, getChirpsReq)
-
-	chirps = []Chirp{}
-
-	decoder = json.NewDecoder(w.Result().Body)
-	err = decoder.Decode(&chirps)
-	if err != nil {
-		t.Error(err)
-	}
-
-	assertEquals(len(chirps), 2, chirps, t)
 }
 
 // Helper method to posts the chirp for the user

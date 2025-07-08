@@ -121,9 +121,9 @@ func createTestUser(cfg *apiConfig, email, password string) (*User, int, error) 
 	return &user, w.Result().StatusCode, err
 }
 
-// Create multiple users, unit test helper function
-// Also returns passwords - indices correspond to each user
-func createMultipleUsers(cfg *apiConfig, numUsers int) ([]User, []string, error) {
+// Create user, also returns passwords - indices correspond to each user
+// Unit test helper function
+func createTestUsers(cfg *apiConfig, numUsers int) ([]User, []string, error) {
 	newUsers := []User{}
 	passwords := []string{}
 
