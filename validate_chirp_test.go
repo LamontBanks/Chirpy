@@ -91,7 +91,7 @@ func TestValidateChirpHandler(t *testing.T) {
 		response := httpRecorder.Result()
 		body, err := io.ReadAll(response.Body)
 		if err != nil {
-			t.Errorf("%v", err)
+			t.Error(err)
 		}
 
 		// Assertions
@@ -114,5 +114,5 @@ func assertEquals(actual, expected, input any, t *testing.T) {
 }
 
 func formatTestError(testname, actual, expected any) string {
-	return fmt.Sprintf("\nInput:\n\t%v\nActual:\n\t%v\nExpected:\n\t%v", testname, actual, expected)
+	return fmt.Sprintf("\nInput:\n\t%+v\nActual:\n\t%+v\nExpected:\n\t%+v", testname, actual, expected)
 }

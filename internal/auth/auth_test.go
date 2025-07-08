@@ -32,7 +32,7 @@ func TestHashPassword(t *testing.T) {
 	for _, c := range cases {
 		actual, err := HashPassword(c.input)
 		if err != nil {
-			t.Errorf("%v", err)
+			t.Error(err)
 		}
 
 		if actual == c.notExpected {
@@ -53,18 +53,18 @@ func TestHashPasswordIsSalted(t *testing.T) {
 	for _, c := range cases {
 		hash1, err := HashPassword(c.input)
 		if err != nil {
-			t.Errorf("%v", err)
+			t.Error(err)
 		}
 
 		hash2, err := HashPassword(c.input)
 		if err != nil {
-			t.Errorf("%v", err)
+			t.Error(err)
 		}
 
-		if hash1 != hash2 {
+		if hash1 == hash2 {
 			t.Error(formatTestError("Hashed password different for same input",
-				fmt.Errorf("%v -> %v != %v -> %v", c.input, hash1, c.input, hash2),
-				fmt.Errorf("%v -> %v == %v -> %v", c.input, hash1, c.input, hash2)))
+				fmt.Errorf("%v = %v", hash1, hash2),
+				fmt.Errorf("%v != %v", hash1, hash2)))
 		}
 	}
 }
@@ -81,7 +81,7 @@ func TestCheckPasswordHash(t *testing.T) {
 	for _, c := range cases {
 		hash, err := HashPassword(c.input)
 		if err != nil {
-			t.Errorf("%v", err)
+			t.Error(err)
 		}
 
 		actual := CheckPasswordHash(c.input, hash)
@@ -100,7 +100,7 @@ func TestJWTGeneratesAToken(t *testing.T) {
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Error(err)
 	}
 
 	if token == "" {
@@ -116,13 +116,13 @@ func TestValidateTokenExtractsUserID(t *testing.T) {
 
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Error(err)
 	}
 
 	// Extract userID from token
 	extractedUserID, err := ValidateToken(token, tokenSecret)
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Error(err)
 	}
 
 	// Verify it's the same token
@@ -135,12 +135,12 @@ func TestValidateTokenRejectExpiredToken(t *testing.T) {
 	tokenSecret := "acb123xyz!@#"
 	expiresIn, err := time.ParseDuration("1ns")
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Error(err)
 	}
 
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Error(err)
 	}
 
 	// Allow token to expire
@@ -176,7 +176,7 @@ func TestValidateTokenRejectWrongTokenSecret(t *testing.T) {
 
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Error(err)
 	}
 
 	// Attempt to read with wrong secret key
@@ -205,7 +205,7 @@ func TestGetBearerToken(t *testing.T) {
 
 	actualToken, err := GetBearerToken(header)
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Error(err)
 	}
 
 	assertEqual(actualToken, expectedBearerToken, header, t)
@@ -263,7 +263,7 @@ func TestGetAPIKey(t *testing.T) {
 
 		actualAPIKey, err := GetAPIKey(header)
 		if err != nil {
-			t.Errorf("%v", err)
+			t.Error(err)
 		}
 
 		if actualAPIKey != c.expected {

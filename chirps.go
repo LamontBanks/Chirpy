@@ -101,7 +101,7 @@ func (cfg *apiConfig) getChirps() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		chirps := []database.Chirp{}
 
-		// Optional Query Parameter - get chirps from given author_id
+		// Optional Query Parameter - get chirps by given author_id
 		author_id := r.URL.Query().Get("author_id")
 
 		if author_id != "" { // By author_id

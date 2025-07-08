@@ -13,13 +13,6 @@ import (
 func TestLogin(t *testing.T) {
 	cfg := initApiConfig()
 
-	// Clear users, create new user
-	err := deleteAllUsersAndPosts(cfg)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
 	email := "fakeuser@email.com"
 	password := "abc123password!"
 
@@ -40,7 +33,7 @@ func TestLogin(t *testing.T) {
 	decoder := json.NewDecoder(w.Result().Body)
 	err = decoder.Decode(&loggedInUser)
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Error(err)
 	}
 
 	// Verify fields
@@ -66,13 +59,6 @@ func TestLogin(t *testing.T) {
 func TestLoginDefaultTokenExpiration(t *testing.T) {
 	cfg := initApiConfig()
 
-	// Clear users, create new user
-	err := deleteAllUsersAndPosts(cfg)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
 	// Create new user
 	email := "fakeuser@email.com"
 	password := "abc123password!"
@@ -94,7 +80,7 @@ func TestLoginDefaultTokenExpiration(t *testing.T) {
 	decoder := json.NewDecoder(w.Result().Body)
 	err = decoder.Decode(&loggedInUser)
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Error(err)
 	}
 
 	// Verify fields

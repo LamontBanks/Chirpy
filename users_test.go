@@ -4,40 +4,76 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
 )
 
-func TestUserCreation(t *testing.T) {
-	cfg := initApiConfig()
+func TestMain(m *testing.M) {
+	setup()
+	tests := m.Run()
+	tearDown()
+	os.Exit(tests)
+}
 
+func setup() {
+	cfg := initApiConfig()
 	err := deleteAllUsersAndPosts(cfg)
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		log.Fatal(err)
+		os.Exit(1)
 	}
+}
 
-	// Create new user
-	email := "fakeuser@email.com"
-	password := "abc!password123"
-	input := fmt.Sprintf(`{"email": "%v", "password": "%v"}`, email, password)
-
-	newUser, responseCode, err := createTestUser(cfg, email, password)
+func tearDown() {
+	cfg := initApiConfig()
+	err := deleteAllUsersAndPosts(cfg)
 	if err != nil {
-		t.Errorf("failed to create user %v: %v", input, err)
+		log.Fatal(err)
+		os.Exit(1)
+	}
+}
+
+func TestUserCreation(t *testing.T) {
+	cases := []struct {
+		name     string
+		email    string
+		password string
+	}{
+		{
+			name:     "New User 1",
+			email:    "fakeuser@email.com",
+			password: "abc!password123",
+		},
+		{
+			name:     "New User 2",
+			email:    "fakeuser2@email.com",
+			password: "abc123",
+		},
 	}
 
-	// Validate user fields
-	assertEquals(responseCode, http.StatusCreated, newUser, t)
-	assertEquals(newUser.Email, email, newUser, t)
-	assertEquals(newUser.IsChirpyRed, false, newUser, t)
-	assertEquals(newUser.CreatedAt.IsZero(), false, newUser, t)
-	assertEquals(newUser.UpdatedAt.IsZero(), false, newUser, t)
-	assertEquals(uuid.Validate(newUser.ID.String()), nil, newUser, t)
+	cfg := initApiConfig()
+	for _, c := range cases {
+		input := fmt.Sprintf(`{"email": "%v", "password": "%v"}`, c.email, c.password)
+
+		newUser, responseCode, err := createTestUser(cfg, c.email, c.password)
+		if err != nil {
+			t.Errorf("failed to create user %v: %v", input, err)
+		}
+
+		// Validate user fields
+		assertEquals(responseCode, http.StatusCreated, newUser, t)
+		assertEquals(newUser.Email, c.email, newUser, t)
+		assertEquals(newUser.IsChirpyRed, false, newUser, t)
+		assertEquals(newUser.CreatedAt.IsZero(), false, newUser, t)
+		assertEquals(newUser.UpdatedAt.IsZero(), false, newUser, t)
+		assertEquals(uuid.Validate(newUser.ID.String()), nil, newUser, t)
+	}
 }
 
 func deleteAllUsersAndPosts(cfg *apiConfig) error {
@@ -83,4 +119,23 @@ func createTestUser(cfg *apiConfig, email, password string) (*User, int, error) 
 	err := decoder.Decode(&user)
 
 	return &user, w.Result().StatusCode, err
+}
+
+// Create multiple users, unit test helper function
+func createMultipleUsers(cfg *apiConfig, numUsers int) ([]User, error) {
+	newUsers := []User{}
+
+	for i := range numUsers {
+		email := fmt.Sprintf("testuser_%v", i)
+		password := fmt.Sprintf("abc00%v", i)
+
+		user, _, err := createTestUser(cfg, email, password)
+		if err != nil {
+			return []User{}, err
+		}
+
+		newUsers = append(newUsers, *user)
+	}
+
+	return newUsers, nil
 }

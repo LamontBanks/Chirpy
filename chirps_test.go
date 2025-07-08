@@ -8,64 +8,98 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestPostChirp(t *testing.T) {
+	cases := []struct {
+		email         string
+		password      string
+		chirpReqBody  string
+		expectedChirp Chirp
+	}{
+		{
+			email:        "fakeuser_1@email.com",
+			password:     "abc123password!",
+			chirpReqBody: `{"body": "Hello, world"}`,
+			expectedChirp: Chirp{
+				Body: "Hello, world",
+			},
+		},
+		{
+			email:        "fakeuser_2@email.com",
+			password:     "abc123password!",
+			chirpReqBody: `{"body": "Hello, world"}`,
+			expectedChirp: Chirp{
+				Body: "Hello, world",
+			},
+		},
+	}
+
 	cfg := initApiConfig()
+	for _, c := range cases {
+		// Create new user
+		_, _, err := createTestUser(cfg, c.email, c.password)
+		if err != nil {
+			t.Error(err)
+		}
 
-	err := deleteAllUsersAndPosts(cfg)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
+		// Log in to get the auth token required for posting
+		loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v"}`, c.email, c.password)
+		request := httptest.NewRequest("POST", "/api/login", strings.NewReader(loginUserBody))
+		w := httptest.NewRecorder()
 
-	// Create new user
-	email := "fakeuser@email.com"
-	password := "abc123password!"
+		cfg.handlerLogin()(w, request)
 
-	_, _, err = createTestUser(cfg, email, password)
-	if err != nil {
-		t.Error(err)
-	}
+		loggedInUser := &LoginResponse{}
+		decoder := json.NewDecoder(w.Result().Body)
+		err = decoder.Decode(&loggedInUser)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
 
-	// Log in, get the JWT token required for posting
-	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v"}`, email, password)
-	request := httptest.NewRequest("POST", "/api/login", strings.NewReader(loginUserBody))
+		// Pass the auth token, create the chirp
+		chirpRequest := httptest.NewRequest("POST", "/api/chirp", strings.NewReader(c.chirpReqBody))
+		chirpRequest.Header.Add("Authorization", "Bearer "+loggedInUser.Token)
+		w = httptest.NewRecorder()
 
-	w := httptest.NewRecorder()
-	cfg.handlerLogin()(w, request)
+		cfg.postChirpHandler()(w, chirpRequest)
 
-	// Read response
-	loggedInUser := &LoginResponse{}
-	decoder := json.NewDecoder(w.Result().Body)
-	err = decoder.Decode(&loggedInUser)
-	if err != nil {
-		t.Errorf("%v", err)
-		t.FailNow()
-	}
+		// Get chirp response. validate fields
+		chirpResp := &Chirp{}
+		decoder = json.NewDecoder(w.Result().Body)
+		err = decoder.Decode(&chirpResp)
+		if err != nil {
+			t.Error(err)
+		}
 
-	// Create chirp, pass the auth token
-	chirp := `{"body": "Hello world"}`
-	chirpRequest := httptest.NewRequest("POST", "/api/chirp", strings.NewReader(chirp))
-	chirpRequest.Header.Add("Authorization", "Bearer "+loggedInUser.Token)
+		// Verify knowm and dynamic fields
+		if chirpResp.Body != c.expectedChirp.Body {
+			t.Error(formatTestError(*chirpResp, chirpResp.Body, c.expectedChirp.Body))
+		}
 
-	// Post chirp, check response
-	w = httptest.NewRecorder()
-	cfg.postChirpHandler()(w, chirpRequest)
+		if err := uuid.Validate(string(chirpResp.ID.String())); err != nil {
+			t.Error(formatTestError(*chirpResp, err, "a UUID"))
+		}
 
-	if w.Result().StatusCode != http.StatusCreated {
-		t.Errorf("POST /api/chirp/ with auth token failed, response: %v, expected: %v", w.Result().StatusCode, http.StatusCreated)
+		if chirpResp.UserID != loggedInUser.ID {
+			t.Error(formatTestError(*chirpResp, chirpResp.UserID, loggedInUser.ID))
+		}
+
+		if chirpResp.CreatedAt.IsZero() {
+			t.Error(formatTestError(*chirpResp, chirpResp.CreatedAt.IsZero(), "createdAt set to real timestamp"))
+		}
+
+		if chirpResp.UpdatedAt.IsZero() {
+			t.Error(formatTestError(*chirpResp, chirpResp.UpdatedAt.IsZero(), "updatedAt set to real timestamp"))
+		}
 	}
 }
 
 func TestGetChirps(t *testing.T) {
 	cfg := initApiConfig()
-
-	err := deleteAllUsersAndPosts(cfg)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
 
 	// Create 2 users
 	email1 := "testuser@gmail.com"
@@ -148,12 +182,6 @@ func TestGetChirps(t *testing.T) {
 
 func TestDeleteChirp(t *testing.T) {
 	cfg := initApiConfig()
-
-	err := deleteAllUsersAndPosts(cfg)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
 
 	// Create user, login
 	email := "testuser@gmail.com"
