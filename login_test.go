@@ -11,6 +11,9 @@ import (
 )
 
 func TestLogin(t *testing.T) {
+	setup()
+	defer tearDown()
+
 	cfg := initApiConfig()
 
 	email := "fakeuser@email.com"

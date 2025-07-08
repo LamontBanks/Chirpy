@@ -4,42 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
 )
 
-func TestMain(m *testing.M) {
-	setup()
-	tests := m.Run()
-	tearDown()
-	os.Exit(tests)
-}
-
-func setup() {
-	cfg := initApiConfig()
-	err := deleteAllUsersAndPosts(cfg)
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
-}
-
-func tearDown() {
-	cfg := initApiConfig()
-	err := deleteAllUsersAndPosts(cfg)
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
-}
-
 func TestUserCreation(t *testing.T) {
+	setup()
+	defer tearDown()
+
 	cases := []struct {
 		name     string
 		email    string
@@ -64,6 +40,7 @@ func TestUserCreation(t *testing.T) {
 		newUser, responseCode, err := createTestUser(cfg, c.email, c.password)
 		if err != nil {
 			t.Errorf("failed to create user %v: %v", input, err)
+			t.FailNow()
 		}
 
 		// Validate user fields

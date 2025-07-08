@@ -13,6 +13,9 @@ import (
 )
 
 func TestPostChirp(t *testing.T) {
+	setup()
+	defer tearDown()
+
 	cases := []struct {
 		email         string
 		password      string
@@ -99,6 +102,9 @@ func TestPostChirp(t *testing.T) {
 }
 
 func TestGetChirps(t *testing.T) {
+	setup()
+	defer tearDown()
+
 	cfg := initApiConfig()
 
 	// Create multiple users
@@ -141,7 +147,8 @@ func TestGetChirps(t *testing.T) {
 
 	// Assertions
 	if len(chirps) != len(messages) {
-		t.Errorf("failed to get all chirps: %+v", chirps)
+		t.Error(formatTestError("failed to get all expected chirps", fmt.Sprintf("%v chirps: %+v", len(chirps), chirps), fmt.Sprintf("%v messages: %+v", len(messages), messages)))
+		t.FailNow()
 	}
 
 	// All messages listed
@@ -155,6 +162,9 @@ func TestGetChirps(t *testing.T) {
 }
 
 func TestDeleteChirp(t *testing.T) {
+	setup()
+	defer tearDown()
+
 	cases := []struct {
 		name                    string
 		messages                []string
