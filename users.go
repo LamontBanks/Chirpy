@@ -23,8 +23,8 @@ type User struct {
 func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := struct {
-			Password string `json:"password"`
 			Email    string `json:"email"`
+			Password string `json:"password"`
 		}{}
 
 		// Decode request

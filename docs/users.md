@@ -21,10 +21,10 @@ Register a user.
 - `email` (required): Email Address (string)
 - `password` (required): No requirements, but must be non-empty  (string)
 
-
 **Sample Request**:
 ```json
-"Content-Type": "application/json"
+POST /api/user
+Content-Type: application/json
 
 {
     "email": "user@example.com",
@@ -33,6 +33,7 @@ Register a user.
 ```
 
 **Responses**:
+
 - **200 OK**
 
     User is registered.
@@ -56,25 +57,63 @@ Register a user.
 
 - **500 Internal Server Error**
 
-Attempted to register user with that already exists:
+    Attempted to register user with that already exists:
 ```json
 {
     "error": "Unable to create user with email user@example.com"
 }
 ```
 
-Missing a required field:
+Missing required field(s):
 ```json
 {
     "error": "Something went wrong"
 }
 ```
 
-### GET /users/{id}
-**Description**: Retrieve a specific user by ID
+### GET `/api/users/`
+
+Retrieve all users
 
 **Parameters**:
-- `id` (path, required): User ID (integer)
+- `id` (path, required): User ID (uuid)
+
+**Headers**:
+- `Content-Type`: application/json
+
+**Sample Request**
+```
+GET http://localhost:8080/api/users
+```
+
+**Responses**:
+
+- **200 OK**
+```json
+[
+    {
+        "id": "769f7956-2fe7-4f33-989c-1d5f9cc0cf24",
+        "email": "user@example.com",
+        "created_at": "2025-07-09T10:04:02.824303Z",
+        "updated_at": "2025-07-09T10:04:02.824303Z",
+        "is_chirpy_red": false
+    },
+    {
+        "id": "1937f0c5-76eb-490a-85a5-8bdde376e4a4",
+        "email": "test@example.com",
+        "created_at": "2025-07-09T10:46:32.460291Z",
+        "updated_at": "2025-07-09T10:46:32.460291Z",
+        "is_chirpy_red": false
+    }
+]
+```
+
+
+### GET /users/{id}
+Retrieve a specific user by ID
+
+**Parameters**:
+- `id` (path, required): User ID (UUID)
 
 **Headers**:
 - `Authorization`: Bearer token (required)
