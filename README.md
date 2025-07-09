@@ -1,23 +1,25 @@
 # Chirpy
 
-A simple REST server written in Golang to practice the basics of developing an API service from scratch.
-The server simulates a locally running social media service where "users" can post "chirps".
+A simple REST server written from scratch in Golang to practice the basics of developing an API service.
+The server simulates a locally running "BlueSky/Twitter-like" site where "users" can post and view "chirps".
 
 Guided project using backend developer training site [boot.dev](https://www.boot.dev/lessons/50f37da8-72c0-4860-a7d1-17e4bda5c243).
 
 Concepts covered:
 - HTTP `GET`, `POST`, `PUT`, `DELETE` operations
 - PostgresSQL acceess and storage
+- Database migrations
 - User authentication
-- Endpoint Authorization
+- Endpoint authorization
 - Query parameters
 - Middleware functions
-- 3rd-party Webhooks
+- 3rd-party webhooks
 - HTTP unit testing
 
 # Setup
 - Go 1.23.1+
 - Postgres 15
+    - Connection string
 - API client (ex: Postman)
 - .env secrets
 
