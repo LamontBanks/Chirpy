@@ -16,16 +16,14 @@ func TestLogin(t *testing.T) {
 
 	cfg := initApiConfig()
 
-	email := "fakeuser@email.com"
-	password := "abc123password!"
-
-	user, _, err := createTestUser(cfg, email, password)
+	// Create single user
+	users, passwords, err := createTestUsers(cfg, 1)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Login
-	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v"}`, email, password)
+	loginUserBody := fmt.Sprintf(`{"email": "%v","password": "%v"}`, users[0].Email, passwords[0])
 	request := httptest.NewRequest("POST", "/api/login", strings.NewReader(loginUserBody))
 	w := httptest.NewRecorder()
 
@@ -44,8 +42,8 @@ func TestLogin(t *testing.T) {
 		t.Errorf("id is not a valid UUID: %v", loggedInUser.ID)
 	}
 
-	if loggedInUser.Email != user.Email {
-		t.Errorf("expected: %v\nactual: %v", loggedInUser.Email, user.Email)
+	if loggedInUser.Email != users[0].Email {
+		t.Errorf("expected: %v\nactual: %v", loggedInUser.Email, users[0].Email)
 	}
 
 	if loggedInUser.Token == "" {

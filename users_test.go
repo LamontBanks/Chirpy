@@ -74,14 +74,10 @@ func deleteAllUsersAndPosts(cfg *apiConfig) error {
 func createTestUser(cfg *apiConfig, email, password string) (*User, int, error) {
 	request := httptest.NewRequest("POST", "/api/users", strings.NewReader(fmt.Sprintf(`{"email": "%v", "password": "%v"}`, email, password)))
 	w := httptest.NewRecorder()
-
-	// Make request
 	cfg.createUserHandler()(w, request)
 
-	// Get response
 	response := w.Result()
 
-	// Return error if user creation fails
 	if response.StatusCode != http.StatusCreated {
 		body, err := io.ReadAll(response.Body)
 		if err != nil {
@@ -90,7 +86,6 @@ func createTestUser(cfg *apiConfig, email, password string) (*User, int, error) 
 		return &User{}, response.StatusCode, fmt.Errorf("error creating new user: %v", string(body))
 	}
 
-	// Otheriwse, decode response into User struct, return
 	user := User{}
 	decoder := json.NewDecoder(response.Body)
 	err := decoder.Decode(&user)
@@ -105,7 +100,7 @@ func createTestUsers(cfg *apiConfig, numUsers int) ([]User, []string, error) {
 	passwords := []string{}
 
 	for i := range numUsers {
-		email := fmt.Sprintf("testuser_%v", i)
+		email := fmt.Sprintf("testuser_%v@gmail.com", i)
 		pw := fmt.Sprintf("abc00%v", i)
 
 		user, _, err := createTestUser(cfg, email, pw)
