@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/LamontBanks/Chirpy/internal/auth"
@@ -19,6 +21,11 @@ type Chirp struct {
 	Body      string    `json:"body"`
 	UserID    uuid.UUID `json:"user_id"`
 }
+
+const (
+	SORT_ASC  = "asc"
+	SORT_DESC = "desc"
+)
 
 // Receives text from the users, saves it, and returns the a chirp
 func (cfg *apiConfig) postChirpHandler() http.HandlerFunc {
@@ -101,7 +108,7 @@ func (cfg *apiConfig) getChirps() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		chirps := []database.Chirp{}
 
-		// Optional Query Parameter - get chirps by given author_id
+		// Optional Query Parameters
 		author_id := r.URL.Query().Get("author_id")
 
 		if author_id != "" { // By author_id
@@ -137,6 +144,16 @@ func (cfg *apiConfig) getChirps() http.HandlerFunc {
 				Body:      c.Body,
 				UserID:    c.UserID,
 			})
+		}
+
+		// Query Parameter: Sort chirps ASC be default, reverse is '?sort=' query is desc
+		slices.SortFunc(response, func(a, b Chirp) int {
+			return a.CreatedAt.Compare(b.CreatedAt)
+		})
+
+		sortOrder := strings.ToLower(r.URL.Query().Get("sort"))
+		if sortOrder == SORT_DESC {
+			slices.Reverse(response)
 		}
 
 		SendJSONResponse(w, http.StatusOK, response)
