@@ -1,0 +1,77 @@
+# Structure: https://learn.openapis.org/specification/structure
+openapi: 3.1.0
+info:
+  title: Chirpy API
+  description: |
+    This is a locally-running API simulating a very simple, Twitter-like service for "users" to post and view "chirps".
+
+    Built as an guided project using [boot.dev](http://www.boot.dev).
+  version: 1.0.0
+paths:
+  /api/users:
+    get:
+      summary: Get all users
+      responses:
+        "200":
+          description: Get all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/user"
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/new_user"
+      responses:
+        "201":
+          description: User is created
+  /api/users/{id}:
+    get:
+      summary: Get single user
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Gets a single user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user"
+                
+components:
+  schemas:
+      user:
+        type: object
+        properties:
+          id:
+            type: string
+          email:
+            type: string
+          created_at:
+            type: string
+          updated_at:
+            type: string
+          is_chirpy_red:
+            type: boolean
+            description: Whether the user is has a "premium" Chirpy membership, default `false`
+      new_user:
+        type: object
+        
+        properties:
+          email:
+            type: string
+            description: Must be unique among all registered users
+          password:
+            type: string
+            description: Must be non-empty; no security/complexity requirements
+
