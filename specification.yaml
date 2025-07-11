@@ -40,6 +40,24 @@ paths:
                 properties:
                   error:
                     type: string
+              example:
+                value: {"error": "Something went wrong"}
+        '400':
+          description: Missing parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                emptyStringPassword:
+                  value: {"error": "Invalid Password"}
+                missingEmail:
+                  value: {"error": "Email required"}
+                missingPassword:
+                  value: {"error": "Password required"}
     put:
       summary: Update register user
       requestBody:
@@ -47,7 +65,27 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/user_request'
-      
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_response'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                missingParameters:
+                  value: {"error": "Something went wrong"}
+                emailAlreadyExists:
+                  value: {"error": "Something went wrong"}
 components:
   schemas:
     user_response:
