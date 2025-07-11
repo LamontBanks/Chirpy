@@ -1,0 +1,484 @@
+{
+	"info": {
+		"_postman_id": "91fb26bc-f189-4cfd-a1ce-7a4fe067dbba",
+		"name": "chirpy",
+		"description": "A simple REST server written from scratch in Golang to practice the basics of developing an API service.The server simulates a locally running \"BlueSky/Twitter-like\" API where users, register, login, post, and view messages.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33595788"
+	},
+	"item": [
+		{
+			"name": "users",
+			"item": [
+				{
+					"name": "/api/users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users"
+							]
+						},
+						"description": "### Add User Endpoint\n\nAllows clients to create a new user. It is a POST request made to the `/api/users` endpoint.\n\n#### Request Parameters\n\nThe request body must be in JSON format and include the following parameters:\n\n- `email` (string): The email address of the user. The email email must be unique among all registered users.\n    \n- `password` (string): The password for the user account. As a learning project API, the only requirement is a non-empty string.\n    \n\n#### Example Request Body\n\n``` json\n{\n    \"email\": \"user@example.com\",\n    \"password\": \"my_seceure_password_123\"\n}\n\n ```\n\n#### Response Structure\n\nUpon a successful request, the server will respond with a JSON object containing the details of the newly created user. The response may include the following fields:\n\n- `id` (string): The unique identifier (UUID) for the newly created user.\n    \n- `email` (string): The email address of the user that was registered.\n    \n- `created_at` (string): The timestamp of when the user was created. Follows standard\n    \n- `updated_at` (string): The timestamp of when the user info was last modified, ex: password updated\n    \n- `is_chirpy_red` (boolean): `true` if the user is a premium \"Chirpy Red\" member, `false` otherwise (default).\n    \n\n#### Example Response\n\n``` json\n{\n    \"id\": \"fa6e8177-4461-4b82-b6de-d04462d44c13\",\n    \"email\": \"user@example.com\",\n    \"created_at\": \"2025-07-09T08:45:35.685121Z\",\n    \"updated_at\": \"2025-07-09T08:45:35.685121Z\",\n    \"is_chirpy_red\": false\n}\n\n ```\n\n### Notes\n\n- Ensure that the email provided is unique and not already associated with an existing user."
+					},
+					"response": []
+				},
+				{
+					"name": "/api/users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"abc123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users"
+							]
+						},
+						"description": "### Add User Endpoint\n\nAllows clients to create a new user. It is a POST request made to the `/api/users` endpoint.\n\n#### Request Parameters\n\nThe request body must be in JSON format and include the following parameters:\n\n- `email` (string): The email address of the user. The email email must be unique among all registered users.\n    \n- `password` (string): The password for the user account. As a learning project API, the only requirement is a non-empty string.\n    \n\n#### Example Request Body\n\n``` json\n{\n    \"email\": \"user@example.com\",\n    \"password\": \"my_seceure_password_123\"\n}\n\n ```\n\n#### Response Structure\n\nUpon a successful request, the server will respond with a JSON object containing the details of the newly created user. The response may include the following fields:\n\n- `id` (string): The unique identifier (UUID) for the newly created user.\n    \n- `email` (string): The email address of the user that was registered.\n    \n- `created_at` (string): The timestamp of when the user was created. Follows standard\n    \n- `updated_at` (string): The timestamp of when the user info was last modified, ex: password updated\n    \n- `is_chirpy_red` (boolean): `true` if the user is a premium \"Chirpy Red\" member, `false` otherwise (default).\n    \n\n#### Example Response\n\n``` json\n{\n    \"id\": \"fa6e8177-4461-4b82-b6de-d04462d44c13\",\n    \"email\": \"user@example.com\",\n    \"created_at\": \"2025-07-09T08:45:35.685121Z\",\n    \"updated_at\": \"2025-07-09T08:45:35.685121Z\",\n    \"is_chirpy_red\": false\n}\n\n ```\n\n### Notes\n\n- Ensure that the email provided is unique and not already associated with an existing user."
+					},
+					"response": []
+				},
+				{
+					"name": "/api/users",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"testuser@example.com\",\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"token\", pm.response.json().token);",
+									"pm.collectionVariables.set(\"refreshToken\", pm.response.json().refresh_token);",
+									"pm.collectionVariables.set(\"email\", pm.response.json().email);",
+									"pm.collectionVariables.set(\"userID\", pm.response.json().id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"abc123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "chirps",
+			"item": [
+				{
+					"name": "/api/chirps",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/chirps",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"chirps"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/chirps/{{chirpID}}",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/chirps/{{chirpID}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"chirps",
+								"{{chirpID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/chirps",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"mostRecentChirpID\", pm.response.json().id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"body\": \"first chirp\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/chirps",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"chirps"
+							]
+						},
+						"description": "Post a chirp"
+					},
+					"response": []
+				},
+				{
+					"name": "api/chirps/{{chirpID}}",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/chirps/{{mostRecentChirpID}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"chirps",
+								"{{mostRecentChirpID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/validate_chirp",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"body\": \"I had something interesting for breakfast\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/validate_chirp",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"validate_chirp"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "webhooks",
+			"item": [
+				{
+					"name": "/api/polka/webhooks",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ApiKey {{polkaAPIKey}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"event\": \"user.upgraded\",\n  \"data\": {\n    \"user_id\": \"d9b4187f-43b9-469d-b9d6-14b8fd241fb6\"\n  }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/polka/webhooks",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"polka",
+								"webhooks"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "admin",
+			"item": [
+				{
+					"name": "/admin/reset",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8080/admin/reset",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"admin",
+								"reset"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/revoke",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/revoke",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"revoke"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "healthz",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/api/healthz",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"healthz"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "userID",
+			"value": ""
+		},
+		{
+			"key": "email",
+			"value": ""
+		},
+		{
+			"key": "chirpID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": ""
+		},
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "mostRecentChirpID",
+			"value": ""
+		},
+		{
+			"key": "polkaAPIKey",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

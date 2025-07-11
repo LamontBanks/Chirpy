@@ -64,7 +64,7 @@ func (cfg *apiConfig) createUserHandler() http.HandlerFunc {
 
 		if err != nil {
 			msg := fmt.Sprintf("Unable to create user with email %v", req.Email)
-			sendErrorJSONResponse(w, msg, 500, err)
+			sendErrorJSONResponse(w, msg, http.StatusInternalServerError, err)
 			return
 		}
 

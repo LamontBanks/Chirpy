@@ -6,8 +6,7 @@ The server simulates a locally running "BlueSky/Twitter-like" API where users, r
 Guided project using backend developer training site [boot.dev](https://www.boot.dev/lessons/50f37da8-72c0-4860-a7d1-17e4bda5c243).
 
 Concepts covered:
-
-- HTTP `GET`, `POST`, `PUT`, `DELETE` operations
+- `GET`, `POST`, `PUT`, `DELETE` operations
 - PostgresSQL acceess and storage
 - Database migrations
 - User authentication
@@ -19,32 +18,89 @@ Concepts covered:
 
 # Setup
 - Go 1.23.1+
+    - TODO go install the project
+    - TODO go install sqlc
+    - TODO go install goose
+    - TODO install `dlv`
 - Postgres 15
     - Connection string
 - API client (ex: Postman)
-- .env secrets
+
 
 # Usage
-1. go run .
-2. API client
-    - Useful Postman script
-3. `reset` endpoint
+## First Run
+### Create DB
+### Create the `.env` file
+
+1. Create a file named `.env` in the root directory and add it to .gitgnore. **DO NOT COMMIT .env**.
+
+1. In `.env`, add the following variables:
+
+    ```shell
+    DB_URL="postgres://<username>:<password>@localhost:5432/chirpy?sslmode=disable"
+    PLATFORM="dev"
+    JWT_SECRET="TODO: Steps to generate"
+    POLKA_API_KEY="<random, alphanumeric 32-char fake api key>"
+    ```
+
+1. From the root directory run
+    
+        $ go run .
+    
+1. `reset` endpoint
+`POST http://localhost:8080/api/reset` Deletes **all* users and posts, clearing the database.
+
+1. (Optional) External API client
+[Postman Collection](/docs/chirpy.postman_collection.json)
 
 # Endpoints
 
 
-# Development
-1. Write db query, if needed
-1. `sqlc generate` Go function
-1. Create handler
-1. Write logic: extract tokens, access db, generate responses, etc.
+# Development Notes
+## Database Schema Changes
+1. Create new [Goose migration](https://github.com/pressly/goose) file, place in [`sql/schema`](sql/schema/).
+
+2. Run migration:
+
+        $ cd sql/schema
+        sql/schema $ goose postgres <postgress connection string> up
+
+        # Rollback last migration (if needed)
+        sql/schema $ goose postgres <postgress connection string> down
+
+## Database Queries
+
+Use SQLC to generate GO functions from SQL queries:
+
+1. Add plain SQL queries here: [`sql/schema`](sql/queries/)
+2. Generate Go SQL functions:
+
+    $ cd <base directory>
+    $ sqlc generate
+
+3. Access queries from the `apiConfig` struct:
+
+    ```golang
+    func (cfg *apiConfig) myHandler() http.HandlerFunc {
+        return func(w http.ResponseWriter, r *http.Request) {
+
+            result, err := cfg.db.MySQLFunction(...)
+
+        }
+    }
+    ```
+See the various handler functions for usage examples.
 
 ## Debugging
-- `dlv` remote server, then connect with remote debugger
-    - Ex: launch.json (VSCode)
-- API client, ex: Postman
-    - Include Postman collection files
-    - Scripts to auto save values
+1. Start the [Delve debugger](https://github.com/go-delve/delve):
+
+        $ dlv debug . --headless --listen=:12345 --continue --accept-multiclient
+
+2. Connect the remote server
+connect with remote debugger, ex: launch.json (VSCode)
+    - Link to launch.json
+- Place breakpoint
+- Send requests, ex: 
 
 # Tests
 - Run unit tests: `$ go test ./...`
@@ -54,7 +110,7 @@ Concepts covered:
             - Improves test readability and easy to add new cases
 
 # Potential enhancements
-- Front-end interface
+- Local Front-end interface
 - Fuzz testing with Go's testing libraries
 - Implement code test coverage
 - Deployment to cloud service; publicly accessible
