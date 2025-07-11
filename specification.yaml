@@ -1,77 +1,73 @@
-# Structure: https://learn.openapis.org/specification/structure
 openapi: 3.1.0
 info:
   title: Chirpy API
-  description: |
-    This is a locally-running API simulating a very simple, Twitter-like service for "users" to post and view "chirps".
-
-    Built as an guided project using [boot.dev](http://www.boot.dev).
+  description: Simple, locally running Twitter-like API allowing "users" to post, view, and delete messages ("chirps").
   version: 1.0.0
 paths:
+  # Users
   /api/users:
     get:
       summary: Get all users
       responses:
-        "200":
-          description: Get all users
+        '200':
+          description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/user"
+                  $ref: '#/components/schemas/user_response'
     post:
-      summary: Create a new user
+      summary: Register new user
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/new_user"
+              $ref: '#/components/schemas/user_request'
       responses:
-        "201":
-          description: User is created
-  /api/users/{id}:
-    get:
-      summary: Get single user
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Gets a single user
+        '201':
+          description: User created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/user"
-                
+                $ref: '#/components/schemas/user_response'
+        '500':
+          description: User not created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    put:
+      summary: Update register user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user_request'
+      
 components:
   schemas:
-      user:
-        type: object
-        properties:
-          id:
-            type: string
-          email:
-            type: string
-          created_at:
-            type: string
-          updated_at:
-            type: string
-          is_chirpy_red:
-            type: boolean
-            description: Whether the user is has a "premium" Chirpy membership, default `false`
-      new_user:
-        type: object
-        
-        properties:
-          email:
-            type: string
-            description: Must be unique among all registered users
-          password:
-            type: string
-            description: Must be non-empty; no security/complexity requirements
-
+    user_response:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+        is_chirpy_red:
+          type: boolean
+    user_request:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+          
