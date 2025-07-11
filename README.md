@@ -17,19 +17,47 @@ Concepts covered:
 - HTTP unit testing
 
 # Setup
-- Go 1.23.1+
-    - TODO go install the project
-    - TODO go install sqlc
-    - TODO go install goose
-    - TODO install `dlv`
-- Postgres 15
-    - Connection string
-- API client (ex: Postman)
+- Install Go 1.23.1+:
 
+- Install project libraries
+
+
+
+- Install [SQLC](https://github.com/sqlc-dev/sqlc):
+
+    `go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest`
+
+- Install [Goose](https://github.com/pressly/goose):
+
+    `go install github.com/pressly/goose/v3/cmd/goose@latest`
+
+- Install the `Delve` debugger: https://github.com/go-delve/delve/tree/master/Documentation/installation
+
+- (Optional) Install an API client (ex: Postman)
+    - [Postman collection](/docs/chirpy.postman_collection.json)
 
 # Usage
-## First Run
+
+## Preliminary
 ### Create DB
+1. Install PostgresSQL (Mac): 
+
+    `brew install postgresql@15`
+
+1. Run in the background:
+
+    `brew services start postgresql@15`
+
+1. Use a client to connect (ex: `psql`):
+
+    `psql postgres`
+
+1. Create the blank database:
+
+    ```sql
+    CREATE DATABASE chirpy;
+    ```
+
 ### Create the `.env` file
 
 1. Create a file named `.env` in the root directory and add it to .gitgnore. **DO NOT COMMIT .env**.
@@ -43,18 +71,19 @@ Concepts covered:
     POLKA_API_KEY="<random, alphanumeric 32-char fake api key>"
     ```
 
-1. From the root directory run
-    
-        $ go run .
-    
-1. `reset` endpoint
-`POST http://localhost:8080/api/reset` Deletes **all* users and posts, clearing the database.
+## Start server
+1. From the root directory: 
 
-1. (Optional) External API client
-[Postman Collection](/docs/chirpy.postman_collection.json)
+        go run .
+    
+1. Run `POST http://localhost:8080/api/reset` to delete **all* users and posts, clearing the database
+    - Can also use during development testing
+
+1. Send requests to `http://localhost:8080/<endpoint>`
 
 # Endpoints
 
+See full [documentation](/docs/).
 
 # Development Notes
 ## Database Schema Changes
@@ -62,21 +91,24 @@ Concepts covered:
 
 2. Run migration:
 
-        $ cd sql/schema
-        sql/schema $ goose postgres <postgress connection string> up
+    ```shell
+    cd sql/schema
+    goose postgres <postgress connection string> up
 
-        # Rollback last migration (if needed)
-        sql/schema $ goose postgres <postgress connection string> down
+    # Rollback last migration (if needed)
+    goose postgres <postgress connection string> down
+    ```
 
 ## Database Queries
-
 Use SQLC to generate GO functions from SQL queries:
 
 1. Add plain SQL queries here: [`sql/schema`](sql/queries/)
-2. Generate Go SQL functions:
+2. Generate Go functions:
 
-    $ cd <base directory>
-    $ sqlc generate
+    ```shell
+    cd <base directory>
+    sqlc generate
+    ````
 
 3. Access queries from the `apiConfig` struct:
 
@@ -89,28 +121,49 @@ Use SQLC to generate GO functions from SQL queries:
         }
     }
     ```
-See the various handler functions for usage examples.
+
+See the existing handler functions for more examples.
+
+# Handlers
+
+Handlers are set in `main.go` with implementation in seperate files.
 
 ## Debugging
 1. Start the [Delve debugger](https://github.com/go-delve/delve):
 
-        $ dlv debug . --headless --listen=:12345 --continue --accept-multiclient
+    ```shell
+    dlv debug . --headless --listen=:12345 --continue --accept-multiclient
+    ```
 
-2. Connect the remote server
-connect with remote debugger, ex: launch.json (VSCode)
-    - Link to launch.json
-- Place breakpoint
-- Send requests, ex: 
+2. Connect to the debugger
+    - Working VSCode `launch.json` config:
+
+    ```json
+    {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Connect to external session",
+                "type": "go",
+                "debugAdapter": "dlv-dap",
+                "request": "attach",
+                "mode": "remote",
+                "port": 12345
+                // "host": "127.0.0.1", // can skip for localhost
+            }
+        ]
+    }
+    ```
+
+3. Set breakpoints in code
+4. Send requests to server (ex: using Postman)
+5. Step debug
 
 # Tests
-- Run unit tests: `$ go test ./...`
-    - Unit test helper functions
-    - Go table structure testing pattern
-        - Slice of `structs` to hold different "cases", followed by actual unit test code
-            - Improves test readability and easy to add new cases
+- Unit tests: `go test ./...`
 
 # Potential enhancements
-- Local Front-end interface
-- Fuzz testing with Go's testing libraries
 - Implement code test coverage
+- Experiment with fuzz testing with Go's testing libraries
+- Local Front-end interface
 - Deployment to cloud service; publicly accessible
